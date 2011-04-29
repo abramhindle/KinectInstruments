@@ -24,7 +24,7 @@
       iavgl = p9
       isumr = p10
       iavgr = p11
-      ishare = 0.05
+      ishare = 0.2
       ires = 1 - ishare
       gksum  = gksum*ires + isum*ishare
       gkavg  = gkavg*ires + iavg*ishare
@@ -42,10 +42,11 @@
         endin
 
         instr 666
-ac	oscil	1000, 20*gksumc/600+10, 1
+ac	oscil	1000, 20*gksuml/600+10, 1
 al	oscil	1000, 2*20*gksuml/600+10, 1
 ar	oscil	1000, 2.9966*20*gksumr/600+10, 1
-af      foscili 1000, 20*gksumc/600 + 20, 1+gkavg, 2.8-gkavg, 0.3+gkavgc, 1        
+;af      foscili 1000, 20*gksumc/600 + 20, 1+gkavg, 2.8-gksumr/600, 0.3+gkavgc, 1        
+af      foscili 1000, 20*gksumc/600 + 20, 1+gkavg, 0.7, 0.7 + gkavgc, 1
         ;       ad distort1 af,2,1,0.1,0
 asig    bbcutm     af*ac, 3, 8, 4, 4, 1, 2,0.3, 1
         al lowpass2 asig,40,20

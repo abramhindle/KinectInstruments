@@ -7,7 +7,7 @@ difference: difference.c
 play:	glview2
 	sudo ./glview2 | perl filter.pl | csound -dm6 -o devaudio -L stdin sine2.orc sine2.sco
 playdiff:	difference
-	sudo ./difference |  csound -dm6 -o devaudio -L stdin energy.orc energy.sco
+	./difference |  csound -dm6 -o devaudio -L stdin energy.orc energy.sco
 
 playOsc:
 	perl oscInstrument.pl | csound -dm6 -o devaudio -L stdin sine2.orc sine2.sco
