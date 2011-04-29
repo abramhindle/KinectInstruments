@@ -86,6 +86,11 @@ int depth_frame = 0;
 #define WIDTH 640
 #define HEIGHT 480
 
+int object_depth = 500;
+int ghit = 0;
+int win = 0;
+int wotime = 0;
+
 void clearBorders( int * map ) {
   for (int y = 0 ; y < HEIGHT; y++) {
     map[WIDTH * y + 0] = 0;
@@ -186,36 +191,76 @@ void DrawGLScene()
 		jmin = depth_map[ 0 ];
 		for ( i  = 1 ; i < FREENECT_FRAME_PIX ; i++ ) {
                   if (depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    diff_depth_map[ i ] = SHADOW;
                   } else if (old_depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    diff_depth_map[ i ] = SHADOW;
                   } else {
                     d = abs(depth_map[ i ] - old_depth_map[ i ]);
-                    diff_depth_map[ i ] = (d > 1 && d < 30)?d:0;//(d > 0)?d:0;
+                    dv = abs(object_depth - depth_map[ i ]);
+                    diff_depth_map[ i ] = (d > 1 && d < 30)?dv:SHADOW;//(d > 0)?d:0;
                   }
                   /* if (depth_frame != 0 && diff_depth_map[ i ] != SHADOW && diff_depth_map[ i ] != 0) {
                     fprintf( stdout, "diff: %d %d %d %d %d\n", depth_frame, i, diff_depth_map[i], depth_map[i], old_depth_map[i] );
                     } */
-                  dv = 0;
                   if (depth_map[ i ] != SHADOW) {
                     old_depth_map[ i ] = depth_map[ i ];
                     //dv = 255*abs(diff_depth_map[i])/255;
-                    dv = diff_depth_map[i];
                   } else {
-                    dv = 0;
                   }
 
 		}
                 // smooth depth_map
-                despeckleInPlace( diff_depth_map );
-                smoothInPlace( diff_depth_map );
+                //despeckleInPlace( diff_depth_map );
+                //smoothInPlace( diff_depth_map );
 
-
-                for (i = 0; i < FREENECT_FRAME_PIX; i++) {
-                  dv = 255*diff_depth_map[i]/30;
-                  color_diff_depth_map[ 3 * i ]    = 255-dv;// + rgb_front[3*i]>>2;
-                  color_diff_depth_map[ 3 * i + 1] = 255-dv + rgb_front[3*i+1]>>2;
-                  color_diff_depth_map[ 3 * i + 2] = 255-dv + rgb_front[3*i+2]>>2;
+                int hit = 0;
+                if (win > 0) {
+                  for (i = 0; i < FREENECT_FRAME_PIX; i++) {
+                    color_diff_depth_map[ 3 * i ]    = (win%2)?255:0;
+                    color_diff_depth_map[ 3 * i + 1] = (win%2)?0:255;
+                    color_diff_depth_map[ 3 * i + 2] = (win%2)?255:0;
+                  }
+                  hit = 0;
+                  ghit = 0;
+                  fprintf(stderr,"win %d",win);
+                  win--;  
+                } else {
+                  for (i = 0; i < FREENECT_FRAME_PIX; i++) {
+                    if (diff_depth_map[ i ] == SHADOW) {
+                      color_diff_depth_map[ 3 * i ] = 0;
+                      color_diff_depth_map[ 3 * i + 1] = depth_mid[3*i+1]>>1;
+                      color_diff_depth_map[ 3 * i + 2] = depth_mid[3*i+2]>>1;
+                    } else {
+                      dv = diff_depth_map[i];
+                      if (dv <= 10) {
+                        hit++;                      
+                      }
+                      if (dv > 255) { dv = 255; }
+                      color_diff_depth_map[ 3 * i ]    = 255-dv;
+                      color_diff_depth_map[ 3 * i + 1] = 255-dv;
+                      color_diff_depth_map[ 3 * i + 2] = 255-dv;
+                    }
+                  }
+                }
+                if (hit > 100) {
+                  ghit++;
+                  fprintf(stderr, "HITTING\n");
+                } else {
+                  ghit = (ghit > 0)?ghit-1:0;                  
+                }
+                if (ghit > 10) {
+                  int v = object_depth;
+                  while (abs(object_depth - v) < 200) {
+                    v = 350 + rand() % (960-350);
+                  }
+                  object_depth = v;
+                  hit = 0;
+                  fprintf(stderr, "\n\n\n\n\n\nWE HIT IT [%d]\n\n\n\n", object_depth);
+                  ghit = 0;
+                  win = 10;
+                  wotime = 0;
+                } else {
+                  wotime++;
                 }
                 int sum,sumleft,sumright,sumcenter;
                 double avg,avgleft,avgright,avgcenter;
@@ -223,8 +268,9 @@ void DrawGLScene()
                 calcStatsForRegion( diff_depth_map, &avgcenter, &sumcenter, WIDTH/4, HEIGHT/4, WIDTH/2, HEIGHT/2);
                 calcStatsForRegion( diff_depth_map, &avgleft, &sumleft, 0, 0, WIDTH/4, HEIGHT);
                 calcStatsForRegion( diff_depth_map, &avgright, &sumright, 3*WIDTH/4, 0, WIDTH/4, HEIGHT);
-                fprintf(stderr, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
-                fprintf(stdout, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
+                //fprintf(stderr, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
+                //fprintf(stdout, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
+                fprintf(stdout,"i2 0 0 %d %d\n",wotime,win);
 		depth_frame++;
 		fflush( stdout );
 	}
@@ -516,8 +562,9 @@ void *freenect_threadfunc(void *arg)
 int main(int argc, char **argv)
 {
 	int res;
-
+        
         int pixels = 640*480;
+        srand(time(0));
 	depth_mid = (uint8_t*)malloc(640*480*3);
 	color_diff_depth_map = (uint8_t*)malloc(640*480*3);
 

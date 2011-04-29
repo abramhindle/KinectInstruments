@@ -184,14 +184,25 @@ void DrawGLScene()
 		depth_mid = tmp;
 		got_depth = 0;
 		jmin = depth_map[ 0 ];
+                int dmax = 0;
 		for ( i  = 1 ; i < FREENECT_FRAME_PIX ; i++ ) {
                   if (depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] *= 9;
+                    //diff_depth_map[ i ] /= 10;
                   } else if (old_depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] *= 9;
+                    //diff_depth_map[ i ] /= 10;
                   } else {
                     d = abs(depth_map[ i ] - old_depth_map[ i ]);
-                    diff_depth_map[ i ] = (d > 1 && d < 30)?d:0;//(d > 0)?d:0;
+                    if (d > 1) {
+                      diff_depth_map[ i ] += 1;// (10*diff_depth_map[i] + 9*(d > 1 && d < 30)?d:0)/8;
+                      //diff_depth_map[ i ] += d;
+                    }
+                    //diff_depth_map[ i ] = (6*diff_depth_map[i] + 4*(d > 1 && d < 30)?d:0)/10;
+                    //diff_depth_map[ i ] += (d > 1 && d < 30)?d:0;//(d > 0)?d:0;
+                    
                   }
                   /* if (depth_frame != 0 && diff_depth_map[ i ] != SHADOW && diff_depth_map[ i ] != 0) {
                     fprintf( stdout, "diff: %d %d %d %d %d\n", depth_frame, i, diff_depth_map[i], depth_map[i], old_depth_map[i] );
@@ -201,28 +212,36 @@ void DrawGLScene()
                     old_depth_map[ i ] = depth_map[ i ];
                     //dv = 255*abs(diff_depth_map[i])/255;
                     dv = diff_depth_map[i];
+                    if (dv > dmax) {
+                      dmax = dv;
+                    }
                   } else {
                     dv = 0;
                   }
 
 		}
                 // smooth depth_map
-                despeckleInPlace( diff_depth_map );
+                //despeckleInPlace( diff_depth_map );
                 smoothInPlace( diff_depth_map );
 
 
                 for (i = 0; i < FREENECT_FRAME_PIX; i++) {
-                  dv = 255*diff_depth_map[i]/30;
-                  color_diff_depth_map[ 3 * i ]    = 255-dv;// + rgb_front[3*i]>>2;
-                  color_diff_depth_map[ 3 * i + 1] = 255-dv + rgb_front[3*i+1]>>2;
-                  color_diff_depth_map[ 3 * i + 2] = 255-dv + rgb_front[3*i+2]>>2;
+                  dv = diff_depth_map[i];//255*diff_depth_map[i]/30;
+                  color_diff_depth_map[ 3 * i ]    = 255*dv/(1+dmax);//255-(dv & 0xFF);// + rgb_front[3*i]>>2;
+                  color_diff_depth_map[ 3 * i + 1] = rgb_front[3*i+1];
+                  color_diff_depth_map[ 3 * i + 2] = rgb_front[3*i+1];rgb_front[3*i+2];
                 }
+
+                //if (depth_frame % 2==0) {
+                //  for (i = 0; i < FREENECT_FRAME_PIX; i++)
+                //       diff_depth_map[i] >>= 1;//255*diff_depth_map[i]/30;                  
+                //}
                 int sum,sumleft,sumright,sumcenter;
                 double avg,avgleft,avgright,avgcenter;
                 calcStats( diff_depth_map, &avg, &sum);
                 calcStatsForRegion( diff_depth_map, &avgcenter, &sumcenter, WIDTH/4, HEIGHT/4, WIDTH/2, HEIGHT/2);
-                calcStatsForRegion( diff_depth_map, &avgleft, &sumleft, 0, 0, WIDTH/4, HEIGHT);
-                calcStatsForRegion( diff_depth_map, &avgright, &sumright, 3*WIDTH/4, 0, WIDTH/4, HEIGHT);
+                calcStatsForRegion( diff_depth_map, &avgleft, &sumleft, 0, 0, WIDTH/3, HEIGHT);
+                calcStatsForRegion( diff_depth_map, &avgright, &sumright, 2*WIDTH/3, 0, WIDTH/3, HEIGHT);
                 fprintf(stderr, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
                 fprintf(stdout, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
 		depth_frame++;
