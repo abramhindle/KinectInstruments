@@ -47,7 +47,7 @@
         p3 = 1/44100
         itime = p4
         iwin = p5
-        gktime = 10000 - 100*itime
+        gktime =  100*itime
         gkwin = iwin
         endin
         
