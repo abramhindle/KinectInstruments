@@ -30,44 +30,10 @@
 #include <string.h>
 #include <assert.h>
 #include "libfreenect.h"
-
+#include <SDL/SDL.h>
 #include <pthread.h>
 
-#define SDL 1
-
-#ifdef DOGL
-#define REDOFF 0
-#define BLUEOFF 1
-#define GREENOFF 2
-#endif
-
-#ifdef SDL
-#define REDOFF 2
-#define BLUEOFF 1
-#define GREENOFF 0
-
-#include <SDL/SDL.h>
-
-#endif
-
-#define WIDTH 640
-#define HEIGHT 480
-
-#ifdef DOGL
-#if defined(__APPLE__)
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
-#endif
-
 #include <math.h>
-
-
 
 pthread_t freenect_thread;
 volatile int die = 0;
@@ -85,10 +51,8 @@ pthread_mutex_t gl_backbuf_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t *depth_mid, *depth_front, *color_diff_depth_map;
 uint8_t *rgb_back, *rgb_mid, *rgb_front;
 
-#ifdef DOGL
-GLuint gl_depth_tex;
-GLuint gl_rgb_tex;
-#endif
+//GLuint gl_depth_tex;
+//GLuint gl_rgb_tex;
 
 freenect_context *f_ctx;
 freenect_device *f_dev;
@@ -107,15 +71,16 @@ int * old_depth_map;/*[ FREENECT_FRAME_PIX ];*/
 int * diff_depth_map;/*[ FREENECT_FRAME_PIX ];*/
 int * tmp_diff_depth_map;/*[ FREENECT_FRAME_PIX ];*/
 
+SDL_Surface * sdlSurface = NULL;
+
+
 int depth_frame = 0;
 #define SHADOW 2047
 #define WIDTH 640
 #define HEIGHT 480
 
-#ifdef SDL
-SDL_Surface * sdlSurface = NULL;
-#endif
-
+// reduce by mod 2
+int nobuildup = 1;
 
 void clearBorders( int * map ) {
   for (int y = 0 ; y < HEIGHT; y++) {
@@ -215,14 +180,25 @@ void DrawScene()
 		depth_mid = tmp;
 		got_depth = 0;
 		jmin = depth_map[ 0 ];
+                int dmax = 0;
 		for ( i  = 1 ; i < FREENECT_FRAME_PIX ; i++ ) {
                   if (depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] *= 9;
+                    //diff_depth_map[ i ] /= 10;
                   } else if (old_depth_map[ i ] == SHADOW) {
-                    diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] = 0;
+                    //diff_depth_map[ i ] *= 9;
+                    //diff_depth_map[ i ] /= 10;
                   } else {
                     d = abs(depth_map[ i ] - old_depth_map[ i ]);
-                    diff_depth_map[ i ] = (d > 1 && d < 30)?d:0;//(d > 0)?d:0;
+                    if (d > 1) {
+                      diff_depth_map[ i ] += 1;// (10*diff_depth_map[i] + 9*(d > 1 && d < 30)?d:0)/8;
+                      //diff_depth_map[ i ] += d;
+                    }
+                    //diff_depth_map[ i ] = (6*diff_depth_map[i] + 4*(d > 1 && d < 30)?d:0)/10;
+                    //diff_depth_map[ i ] += (d > 1 && d < 30)?d:0;//(d > 0)?d:0;
+                    
                   }
                   /* if (depth_frame != 0 && diff_depth_map[ i ] != SHADOW && diff_depth_map[ i ] != 0) {
                     fprintf( stdout, "diff: %d %d %d %d %d\n", depth_frame, i, diff_depth_map[i], depth_map[i], old_depth_map[i] );
@@ -232,28 +208,39 @@ void DrawScene()
                     old_depth_map[ i ] = depth_map[ i ];
                     //dv = 255*abs(diff_depth_map[i])/255;
                     dv = diff_depth_map[i];
+                    if (dv > dmax) {
+                      dmax = dv;
+                    }
                   } else {
                     dv = 0;
                   }
 
 		}
                 // smooth depth_map
-                despeckleInPlace( diff_depth_map );
+                //despeckleInPlace( diff_depth_map );
                 smoothInPlace( diff_depth_map );
 
 
                 for (i = 0; i < FREENECT_FRAME_PIX; i++) {
-                  dv = 255*diff_depth_map[i]/30;
-                  color_diff_depth_map[ 3 * i + REDOFF]   = 255-dv;// + rgb_front[3*i]>>2;
-                  color_diff_depth_map[ 3 * i + BLUEOFF]  = 255-dv + depth_mid[3*i]/3 + depth_mid[3*i+1]/3+depth_mid[3*i+2]/3;// rgb_front[3*i+1]>>2;
-                  color_diff_depth_map[ 3 * i + GREENOFF] = depth_mid[3*i+2];
+                  dv = diff_depth_map[i];//255*diff_depth_map[i]/30;
+                  //red
+                  color_diff_depth_map[ 3 * i + 2 ] = 255-255*dv/(1+dmax);//255-(dv & 0xFF);// + rgb_front[3*i]>>2;
+                  //blue
+                  color_diff_depth_map[ 3 * i + 1]  = depth_mid[3*i+1]/2 + depth_mid[3*i+2]/2;//rgb_front[3*i+1];
+                  //green
+                  color_diff_depth_map[ 3 * i + 0]  = depth_mid[3*i+0]/2 + depth_mid[3*i+2]/2;///rgb_front[3*i+2];//rgb_front[3*i+2];
+                }
+                // put an option he
+                if (nobuildup && depth_frame % 2==0) {
+                  for (i = 0; i < FREENECT_FRAME_PIX; i++)
+                       diff_depth_map[i] >>= 1;//255*diff_depth_map[i]/30;                  
                 }
                 int sum,sumleft,sumright,sumcenter;
                 double avg,avgleft,avgright,avgcenter;
                 calcStats( diff_depth_map, &avg, &sum);
                 calcStatsForRegion( diff_depth_map, &avgcenter, &sumcenter, WIDTH/4, HEIGHT/4, WIDTH/2, HEIGHT/2);
-                calcStatsForRegion( diff_depth_map, &avgleft, &sumleft, 0, 0, WIDTH/4, HEIGHT);
-                calcStatsForRegion( diff_depth_map, &avgright, &sumright, 3*WIDTH/4, 0, WIDTH/4, HEIGHT);
+                calcStatsForRegion( diff_depth_map, &avgleft, &sumleft, 0, 0, WIDTH/3, HEIGHT);
+                calcStatsForRegion( diff_depth_map, &avgright, &sumright, 2*WIDTH/3, 0, WIDTH/3, HEIGHT);
                 fprintf(stderr, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
                 fprintf(stdout, "i1 0 0 %d %f %d %f %d %f %d %f\n", sum, avg, sumcenter, avgcenter, sumleft, avgleft, sumright, avgright);
 		depth_frame++;
@@ -267,52 +254,16 @@ void DrawScene()
 	}
 
 	pthread_mutex_unlock(&gl_backbuf_mutex);
-#ifdef SDL
+
+
         SDL_Flip(sdlSurface);
-#endif
 
-
-#ifdef DOGL        
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-
-	glEnable(GL_TEXTURE_2D);
-
-	glBindTexture(GL_TEXTURE_2D, gl_depth_tex);
-	/* glTexImage2D(GL_TEXTURE_2D, 0, 3, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, depth_front); */
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, color_diff_depth_map );
-
-	glBegin(GL_TRIANGLE_FAN);
-	glColor4f(255.0f, 255.0f, 255.0f, 255.0f);
-	glTexCoord2f(0, 0); glVertex3f(0,0,0);
-	glTexCoord2f(1, 0); glVertex3f(640,0,0);
-	glTexCoord2f(1, 1); glVertex3f(640,480,0);
-	glTexCoord2f(0, 1); glVertex3f(0,480,0);
-	glEnd();
-
-	// glBindTexture(GL_TEXTURE_2D, gl_rgb_tex);
-	// if (current_format == FREENECT_VIDEO_RGB || current_format == FREENECT_VIDEO_YUV_RGB)
-	// 	glTexImage2D(GL_TEXTURE_2D, 0, 3, 640, 480, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb_front);
-	// else
-	// 	glTexImage2D(GL_TEXTURE_2D, 0, 1, 640, 480, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, rgb_front+640*4);
-        // 
-	// glBegin(GL_TRIANGLE_FAN);
-	// glColor4f(255.0f, 255.0f, 255.0f, 255.0f);
-	// glTexCoord2f(0, 0); glVertex3f(640,0,0);
-	// glTexCoord2f(1, 0); glVertex3f(1280,0,0);
-	// glTexCoord2f(1, 1); glVertex3f(1280,480,0);
-	// glTexCoord2f(0, 1); glVertex3f(640,480,0);
-	// glEnd();
-
-	glutSwapBuffers();
-#endif
 
 }
 
-#ifdef DOGL
 void keyPressed(unsigned char key, int x, int y)
 {
-	if (key == 27) {
+  /*	if (key == 27) {
 		die = 1;
 		pthread_join(freenect_thread, NULL);
 		glutDestroyWindow(window);
@@ -373,22 +324,24 @@ void keyPressed(unsigned char key, int x, int y)
 		freenect_set_led(f_dev,LED_OFF);
 	}
 	freenect_set_tilt_degs(f_dev,freenect_angle);
+  */
 }
-#endif
 
-#ifdef DOGL
 void ReSizeGLScene(int Width, int Height)
 {
+  /*
 	glViewport(0,0,Width,Height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	//glOrtho (0, 1280, 480, 0, -1.0f, 1.0f);
         glOrtho (0, 640, 480, 0, -1.0f, 1.0f);
 	glMatrixMode(GL_MODELVIEW);
+  */
 }
 
 void InitGL(int Width, int Height)
 {
+  /*
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0);
 	glDepthFunc(GL_LESS);
@@ -405,14 +358,12 @@ void InitGL(int Width, int Height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	ReSizeGLScene(Width, Height);
+  */
 }
-#endif
 
-
-#ifdef DOGL
 void *gl_threadfunc(void *arg)
 {
-  fprintf(stderr,"GL thread\n");
+  /* fprintf(stderr,"GL thread\n");
 
 	glutInit(&g_argc, g_argv);
 
@@ -434,8 +385,9 @@ void *gl_threadfunc(void *arg)
 	glutMainLoop();
 
 	return NULL;
+  */
 }
-#endif
+
 uint16_t t_gamma[2048];
 
 void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
@@ -443,7 +395,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 	int i;
 	uint16_t *depth = (uint16_t*)v_depth;
 
-	pthread_mutex_lock(&gl_backbuf_mutex);
+	pthread_mutex_lock(&gl_backbuf_mutex);        
 	for (i=0; i<FREENECT_FRAME_PIX; i++) {
 		int pval = t_gamma[depth[i]];
 		depth_map[ i ] = depth[ i ] ; /* pval; */
@@ -560,18 +512,11 @@ void *freenect_threadfunc(void *arg)
 int main(int argc, char **argv)
 {
 	int res;
-        
-#ifdef SDL 
         SDL_Event e;
         SDL_MouseMotionEvent m;
-
-#endif
-#ifdef DOGL
-	color_diff_depth_map = (uint8_t*)malloc(640*480*3);
-#endif
-        int pixels = 640*480;
-	depth_mid = (uint8_t*)malloc(640*480*3);
-	color_diff_depth_map = (uint8_t*)malloc(640*480*3);
+        int pixels = WIDTH * HEIGHT;
+	depth_mid = (uint8_t*)malloc(WIDTH*480*3);
+	//color_diff_depth_map = (uint8_t*)malloc(WIDTH*480*3);
 
         depth_map = (int *) malloc(sizeof(int)*pixels);
         memset(depth_map, 0, sizeof(int)*pixels);
@@ -582,12 +527,17 @@ int main(int argc, char **argv)
         tmp_diff_depth_map = (int *) malloc(sizeof(int)*pixels);
         memset(tmp_diff_depth_map, 0, sizeof(int)*pixels);
 
-	depth_front = (uint8_t*)malloc(640*480*3);
-	rgb_back = (uint8_t*)malloc(640*480*3);
-	rgb_mid = (uint8_t*)malloc(640*480*3);
-	rgb_front = (uint8_t*)malloc(640*480*3);
+	depth_front = (uint8_t*)malloc(WIDTH*HEIGHT*3);
+	rgb_back = (uint8_t*)malloc(WIDTH*HEIGHT*3);
+	rgb_mid = (uint8_t*)malloc(WIDTH*HEIGHT*3);
+	rgb_front = (uint8_t*)malloc(WIDTH*HEIGHT*3);
 
 	//printf("Kinect camera test\n");
+
+        sdlSurface = SDL_SetVideoMode(WIDTH , HEIGHT, 24, 0); 
+        SDL_WM_SetCaption("Goop",0);
+        atexit(SDL_Quit);
+        color_diff_depth_map = sdlSurface->pixels;
 
 	int i;
 	for (i=0; i<2048; i++) {
@@ -627,14 +577,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-#ifdef SDL
-
-        sdlSurface = SDL_SetVideoMode(WIDTH , HEIGHT, 24, 0); 
-        SDL_WM_SetCaption("Goop",0);
-        atexit(SDL_Quit);
-        color_diff_depth_map = sdlSurface->pixels;
-
-
+	// OS X requires GLUT to run on the main thread
+	//gl_threadfunc(NULL);
         for(;;) {
           DrawScene();
           while (SDL_PollEvent(&e)) {
@@ -642,8 +586,9 @@ int main(int argc, char **argv)
             case SDL_KEYDOWN:
               if (e.key.keysym.sym == 'x') {
 		exit(0);               
-              } else if (e.key.keysym.sym == SDLK_ESCAPE) { //Escape
-		exit(0);               
+              } else if (e.key.keysym.sym == 'b') {
+                nobuildup = !nobuildup;
+
               } else if (e.key.keysym.sym == 'r') {
 		freenect_angle=0;
                 freenect_set_tilt_degs(f_dev,freenect_angle);
@@ -660,30 +605,21 @@ int main(int argc, char **argv)
                   freenect_angle = -30;
 		}
                 freenect_set_tilt_degs(f_dev,freenect_angle);
-
+                
               }
               break;
-            case SDL_QUIT:
-              exit(0);
-            case SDL_MOUSEMOTION:
-            case SDL_MOUSEBUTTONDOWN:
-              m = e.motion;
-              /* paint in the cursor on click */
-              if (m.state) {
-              } /* if state */
-            } /* event type */
-          } /* Poll */
-          SDL_Delay(66);            
-        }
-        
+              case SDL_QUIT:
+                exit(0);
+              case SDL_MOUSEMOTION:
+              case SDL_MOUSEBUTTONDOWN:
+                m = e.motion;
+                /* paint in the cursor on click */
+                if (m.state) {
+                } /* if state */
+              } /* event type */
+            } /* Poll */
+          SDL_Delay(10);           
+          }
 
-#endif
-
-
-#ifdef DOGL
-	// OS X requires GLUT to run on the main thread
-	gl_threadfunc(NULL);
-
-#endif        
 	return 0;
 }

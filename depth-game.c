@@ -280,7 +280,7 @@ void DrawScene()
                 }
                 if (ghit > 10) {
                   int v = object_depth;
-                  while (abs(object_depth - v) < 200) {
+                  while (abs(object_depth - v) < 400) {
                     int k = (960 - 350) / 3;
                     v = 350 + rand() % k + rand() % k + rand() % k;
                   }
@@ -691,23 +691,39 @@ int main(int argc, char **argv)
 		exit(0);               
               } else if (e.key.keysym.sym == SDLK_ESCAPE) { //Escape
 		exit(0);               
-              } else if (e.key.keysym.sym == '+') {
-              } else if (e.key.keysym.sym == '-') {
-                break;
-              case SDL_QUIT:
-                exit(0);
-              case SDL_MOUSEMOTION:
-              case SDL_MOUSEBUTTONDOWN:
-                m = e.motion;
-                /* paint in the cursor on click */
+              } else if (e.key.keysym.sym == 'r') {
+		freenect_angle=0;
+                freenect_set_tilt_degs(f_dev,freenect_angle);
+              } else if (e.key.keysym.sym == '=') {
+		freenect_angle++;
+		if (freenect_angle > 30) {
+                  freenect_angle = 30;
+		}
+                freenect_set_tilt_degs(f_dev,freenect_angle);
+                        
+              } else if ( e.key.keysym.sym == '-') {
+		freenect_angle--;
+		if (freenect_angle < -30) {
+                  freenect_angle = -30;
+		}
+                freenect_set_tilt_degs(f_dev,freenect_angle);
+
+              }
+              break;
+            case SDL_QUIT:
+              exit(0);
+            case SDL_MOUSEMOTION:
+            case SDL_MOUSEBUTTONDOWN:
+              m = e.motion;
+              /* paint in the cursor on click */
                 if (m.state) {
                 } /* if state */
-              } /* event type */
-            } /* Poll */
-            
-          }
-          SDL_Delay(10);
+            } /* event type */
+          } /* Poll */
+          SDL_Delay(10);          
         }
+
+
 
 
 #endif

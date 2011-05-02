@@ -1,29 +1,40 @@
-
+CC=gcc -std=c99 -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect
+CSOUND=csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
+CSOUNDJACK=csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
 glview2: glview2.c
-	gcc -std=c99 -I../include -DSDL=1 glview2.c -o glview2 -lGL -lglut -lSDL -lfreenect
+	$(CC) glview2.c -o glview2 
 difference: difference.c
-	gcc -std=c99 -DSDL=1 -I../include difference.c -o difference -lGL -lglut -lSDL -lfreenect
+	$(CC) difference.c -o difference 
 
 play:	glview2
-	sudo ./glview2 | perl filter.pl | csound -dm6 -o devaudio -L stdin sine2.orc sine2.sco
+	./glview2 | perl filter.pl | $(CSOUND) sine2.orc sine2.sco
+playfm:	glview2
+	./glview2 | perl simple-filter.pl | $(CSOUND) fm-xy.orc fm-xy.sco
+playfmjack:	glview2
+	./glview2 | perl simple-filter.pl | $(CSOUNDJACK) fm-xy441.orc fm-xy.sco
+
 playdiff:	difference
-	./difference |  csound -+rtaudio=alsa -dm6 -o devaudio -L stdin energy.orc energy.sco
+	./difference |  $(CSOUND) energy.orc energy.sco
 energytest:	energy.orc
-	csound -dm6 -o devaudio -L stdin energy.orc energy.sco
+	$(CSOUND) energy.orc energy.sco
 
 goopold:	goop.c
-	gcc -std=c99 -I../include goop.c -o goop -lGL -lglut -lfreenect
+	$(CC) goop.c -o goop 
 goop:	goop-sdl.c	
-	gcc -std=c99 -I../include -I/usr/include goop-sdl.c -o goop -lSDL -lfreenect
+	$(CC)  goop-sdl.c -o goop
 
 depth-game:	depth-game.c
-	gcc -std=c99 -DSDL=1 -I../include depth-game.c -o depth-game -lSDL -lfreenect
+	$(CC) depth-game.c -o depth-game
 
 play-depth-game:	depth-game
-	./depth-game |  csound -dm6 -+rtaudio=alsa -o devaudio -L stdin energy.orc energy2.sco
+	./depth-game |  $(CSOUND) energy.orc energy2.sco
+play-depth-game-jack:	depth-game
+	./depth-game |  $(CSOUNDJACK) energy441.orc energy2.sco
 
 playgoop:	goop energy.orc
-	./goop |  csound -dm6 -+rtaudio=alsa -o devaudio -L stdin energy.orc energy.sco
+	./goop |  $(CSOUND) energy.orc energy.sco
+playgoopjack:	goop energy.orc
+	./goop |  $(CSOUNDJACK) energy441.orc energy.sco
 
 
 
