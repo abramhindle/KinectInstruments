@@ -1,6 +1,9 @@
-CC=gcc -std=c99 -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect
 CSOUND=csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
 CSOUNDJACK=csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
+OPENCV=-lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_video 
+CC=gcc -std=c99 -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
+CPP=g++ -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
+
 glview2: glview2.c
 	$(CC) glview2.c -o glview2 
 difference: difference.c
@@ -43,4 +46,5 @@ playOsc:
 playSkel:
 	repos/OSCeleton/STDOUTeleton -w | perl stdouteletoninstrument.pl | csound -dm6 -o devaudio -L stdin sine2.orc sine2.sco
 
-
+KinectCV:	KinectCV.cpp
+	$(CPP) KinectCV.cpp -o KinectCV
