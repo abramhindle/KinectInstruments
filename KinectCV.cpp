@@ -135,7 +135,10 @@ int ghit = 0;
 int win = 0;
 int wotime = 0;
 
-Mat lastDepthFrame;
+#define MYCVTYPE CV_32S
+
+cv::Mat lastDepthFrame(HEIGHT, WIDTH, MYCVTYPE);
+cv::Mat depthFrame(HEIGHT, WIDTH, MYCVTYPE);
 
 
 void clearBorders( int * map ) {
@@ -238,11 +241,14 @@ void DrawScene()
                 memcpy(color_diff_depth_map, depth_mid, WIDTH*HEIGHT*3);
 		got_depth = 0;
 		jmin = depth_map[ 0 ];
-                cv::Mat depthFrame(HEIGHT, WIDTH, CV_32SC1, depth_map, sizeof(int) * WIDTH ); // auto step
-                if (dfirst) {
-                  dfirst = 0;
-                  lastDepthFrame.copyTo( depthFrame );
-                }
+                Mat depthFrame(HEIGHT,WIDTH, MYCVTYPE, depth_map, sizeof(int) * WIDTH);//, sizeof(int) * WIDTH ); // auto step
+                //for (int i = 0 ; i < FREENECT_FRAME_PIX ; i++ ) {
+                //  if (depth_map[ i ] != SHADOW) {
+                //    depthFrame.at<int>(i/WIDTH,i%WIDTH) = depth_map[i];
+                //  }
+                //}
+
+
                 /*
 		for ( i  = 1 ; i < FREENECT_FRAME_PIX ; i++ ) {
                   if (depth_map[ i ] == SHADOW) {
@@ -280,17 +286,20 @@ void DrawScene()
                 Scalar mean;
                 Scalar stddev;
                 meanStdDev(depthFrame, mean, stddev);
-                printf("\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
-                Mat gray(WIDTH, HEIGHT, CV_8U);
-                depthFrame.convertTo( depthFrame, CV_8U);
+                fprintf(stdout,"\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
+
+
+
+                Mat gray(HEIGHT, WIDTH, CV_8U);
+                depthFrame.convertTo( gray, CV_8U);
                 Moments mo = cv::moments( gray );
 
-                printf("\t\"spacial-moments\":[%f,%f,%f,%f,%f,%f,%f,%f,%f,%f],\t",
+                fprintf(stdout,"\t\"spacial-moments\":[%e,%e,%e,%e,%e,%e,%e,%e,%e,%e],\t",
                        mo.m00, mo.m10, mo.m01, mo.m20, mo.m11, mo.m02, mo.m30, mo.m21, mo.m12, mo.m03);
-                printf("\t\"central-moments\":[%f,%f,%f,%f,%f,%f,%f],\t", mo.mu20, mo.mu11, mo.mu02, mo.mu30, mo.mu21, mo.mu12, mo.mu03);
+                fprintf(stdout,"\t\"central-moments\":[%e,%e,%e,%e,%e,%e,%e],\t", mo.mu20, mo.mu11, mo.mu02, mo.mu30, mo.mu21, mo.mu12, mo.mu03);
                 double hu[7];
                 cv::HuMoments( mo, hu );
-                printf("\t\"hu\":[%f,%f,%f,%f,%f,%f],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
+                fprintf(stdout,"\t\"hu\":[%e,%e,%e,%e,%e,%e],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
 
 
                 const int hSize = 8;
@@ -308,21 +317,38 @@ void DrawScene()
                               hist, 1, (const int*)histSize, (const float **)sranges,
                               true, // the histogram is uniform
                               false );
-                printf("\t\t\"hist\":[\n\t\t\t");
+                fprintf(stdout,"\t\t\"hist\":[\t\t\t");
                 for( int h = 0; h < hSize; h++ ) {
                   float binVal = hist.at<float>(h, 0);
-                  printf("%s%e",((h==0)?"":","),binVal);
+                  fprintf(stdout,"%s%e",((h==0)?"":","),binVal);
                 }
-                printf("]\t");
-                /*
-                Mat diff;
+                fprintf(stdout,"]\t");
+                
+                Mat diff(HEIGHT,WIDTH,MYCVTYPE);
+
                 absdiff(depthFrame,lastDepthFrame,diff);
+                // erode( diff, diff, Mat() );
+                //GaussianBlur( diff, diff, Size(5, 5), 1.2, 1.2);
                 meanStdDev(diff, mean, stddev);
-                printf("\t\"meandiff\":%e, \"stddiff\":%e\t",mean[0],stddev[0]);
-                printf("}\n");
+                fprintf(stdout,"\t,\"meandiff\":%e, \"stddiff\":%e\t",mean[0],stddev[0]);
+                //printf("}\n");
+
+
+                Mat left( diff, Range(0,HEIGHT-1),Range(0,WIDTH/3) );
+                Mat right( diff, Range(0,HEIGHT-1), Range(2*WIDTH/3, WIDTH-1));
+                Mat center( diff, Range(0,HEIGHT-1), Range(2*WIDTH/5, 4*WIDTH/5));
+
+                meanStdDev(left, mean, stddev);
+                fprintf(stdout,"\t,\"leftmean\":%e, \"leftstd\":%e ",mean[0],stddev[0]);
+                meanStdDev(right, mean, stddev);
+                fprintf(stdout,"\t,\"rightmean\":%e, \"rightstd\":%e ",mean[0],stddev[0]);
+                meanStdDev(center, mean, stddev);
+                fprintf(stdout,"\t,\"centermean\":%e, \"centerstd\":%e ",mean[0],stddev[0]);
+                
+
                 depthFrame.copyTo(lastDepthFrame);
-                */
-                printf("}\n");
+                
+                fprintf(stdout,"}\n");
 
 
 		depth_frame++;
@@ -743,7 +769,7 @@ int main(int argc, char **argv)
                 } /* if state */
             } /* event type */
           } /* Poll */
-          SDL_Delay(10);          
+          SDL_Delay(33);          
         }
 
 

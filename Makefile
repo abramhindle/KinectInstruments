@@ -1,5 +1,5 @@
-CSOUND=csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
-CSOUNDJACK=csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
+CSOUND=/usr/local/bin/csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
+CSOUNDJACK=/usr/bin/csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
 OPENCV=-lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_video 
 CC=gcc -std=c99 -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
 CPP=g++ -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
@@ -48,3 +48,7 @@ playSkel:
 
 KinectCV:	KinectCV.cpp
 	$(CPP) KinectCV.cpp -o KinectCV
+play-KinectCV:	KinectCV
+	./KinectCV | perl json-stats.pl | $(CSOUND) harmonics.orc harmonics.sco
+play-KinectCVJack:	KinectCV
+	./KinectCV | perl json-stats.pl | $(CSOUNDJACK) harmonics.orc harmonics.sco
