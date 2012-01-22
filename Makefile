@@ -1,13 +1,17 @@
 CSOUND=/usr/local/bin/csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
 CSOUNDJACK=/usr/bin/csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
 OPENCV=-lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_video 
-CC=gcc -std=c99 -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
-CPP=g++ -O3 -DSDL=1 -I../include -lGL -lglut -lSDL -lfreenect -lm $(OPENCV) -I /usr/local/include/opencv 
+SHAREDFLAGS=-DSDL=1 -lGL -lglut -lSDL -lfreenect -lm `pkg-config --cflags sdl` `pkg-config --cflags libfreenect` `pkg-config --libs sdl` `pkg-config --libs libfreenect` `pkg-config --cflags opencv` `pkg-config --libs opencv`
+CC=gcc -std=c99 -O3 
+CPP=g++ -O3 -DSDL=1 -lGL -lglut -lSDL  ${SHAREDFLAGS}
+
+binaries:	glview2 difference goop depth-game KinectCV
+
 
 glview2: glview2.c
-	$(CC) glview2.c -o glview2 
+	$(CC) glview2.c -o glview2 ${SHAREDFLAGS}
 difference: difference.c
-	$(CC) difference.c -o difference 
+	$(CC) difference.c -o difference ${SHAREDFLAGS}
 
 play:	glview2
 	./glview2 | perl filter.pl | $(CSOUND) sine2.orc sine2.sco
@@ -22,12 +26,12 @@ energytest:	energy.orc
 	$(CSOUND) energy.orc energy.sco
 
 goopold:	goop.c
-	$(CC) goop.c -o goop 
+	$(CC) goop.c -o goop $(SHAREDFLAGS)
 goop:	goop-sdl.c	
-	$(CC)  goop-sdl.c -o goop
+	$(CC)  goop-sdl.c -o goop $(SHAREDFLAGS)
 
 depth-game:	depth-game.c
-	$(CC) depth-game.c -o depth-game
+	$(CC) depth-game.c -o depth-game $(SHAREDFLAGS)
 
 play-depth-game:	depth-game
 	./depth-game |  $(CSOUND) energy.orc energy2.sco
@@ -47,7 +51,7 @@ playSkel:
 	repos/OSCeleton/STDOUTeleton -w | perl stdouteletoninstrument.pl | csound -dm6 -o devaudio -L stdin sine2.orc sine2.sco
 
 KinectCV:	KinectCV.cpp
-	$(CPP) KinectCV.cpp -o KinectCV
+	$(CPP) KinectCV.cpp -o KinectCV $(SHAREDFLAGS)
 play-KinectCV:	KinectCV
 	./KinectCV | perl json-stats.pl | $(CSOUND) harmonics.orc harmonics.sco
 play-KinectCVJack:	KinectCV

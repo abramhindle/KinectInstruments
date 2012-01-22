@@ -30,6 +30,7 @@
 #include <string.h>
 #include <assert.h>
 #include "libfreenect.h"
+#include "old.h"
 
 #include <pthread.h>
 

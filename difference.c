@@ -23,7 +23,9 @@
  * Binary distributions must follow the binary distribution requirements of
  * either License.
  */
-
+#define FREENECT_FRAME_W 640 
+#define FREENECT_FRAME_H 480 
+#define FREENECT_FRAME_PIX (FREENECT_FRAME_H*FREENECT_FRAME_W) 
 
 #include <stdio.h>
 #include <stdlib.h>
