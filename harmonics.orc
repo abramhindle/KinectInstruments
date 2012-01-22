@@ -99,21 +99,22 @@ adelay   delay asum, 1/icps
         itab = 1
         iamp = p4
         icps = p5
+	ia = sqrt(icps * icps)
 adelay1 init 0
 adelay2 init 0
 adelay3 init 0
 arand1  rand 1
 arand2  rand 1
 arand3  rand 1
-alp1    resonr adelay1, icps, 20
-alp2    resonr adelay2, 2*icps, 20
-alp3    resonr adelay3, 3*icps, 20
+alp1    resonr adelay1, 0.01+ia, 20
+alp2    resonr adelay2, 0.01+2*ia, 20
+alp3    resonr adelay3, 0.01+3*ia, 20
 asum1   clip arand1 + 0.1*alp1 , 0 , 5
 asum2   clip arand2 + 0.1*alp2 , 0 , 5
 asum3   clip arand3 + 0.1*alp3 , 0 , 5
-adelay1   delay asum1, 1/icps
-adelay2   delay asum2, 1/(2*icps)
-adelay3   delay asum3, 1/(3*icps)
+adelay1   delay asum1, 0.01+1/ia
+adelay2   delay asum2, 0.01+1/(2*ia)
+adelay3   delay asum3, 0.01+1/(3*ia)
        out (asum1 + asum2 + asum3)*iamp
        endin
 

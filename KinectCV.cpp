@@ -311,9 +311,10 @@ void DrawScene()
                 const float * sranges[] = {srangesf};
                 const int channelsi = 0;
                 const int * channels = &channelsi;
-                const Mat m[] = { depthFrame  };
+                const Mat m[] = { gray  };
                 const Mat mask;
                 Mat hist;
+	        try {
                 cv::calcHist( m, 1, &channelsi, mask,//do not use mask
                               hist, 1, (const int*)histSize, (const float **)sranges,
                               true, // the histogram is uniform
@@ -324,7 +325,9 @@ void DrawScene()
                   fprintf(stdout,"%s%e",((h==0)?"":","),binVal);
                 }
                 fprintf(stdout,"]\t");
-                
+                } catch (exception &e) {
+			cout << e.what() << endl;
+		}
                 Mat diff(HEIGHT,WIDTH,MYCVTYPE);
 
                 absdiff(depthFrame,lastDepthFrame,diff);
