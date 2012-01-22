@@ -1,6 +1,6 @@
-       	sr = 22050
+       	sr = 44100
 	kr = 220.5
-	ksmps = 100
+	ksmps = 200
 	nchnls = 1
 
       gkindex init 1

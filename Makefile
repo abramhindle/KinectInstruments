@@ -1,4 +1,4 @@
-CSOUND=/usr/local/bin/csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
+CSOUND=/usr/bin/csound -dm6 -+rtaudio=alsa -dm6 -o devaudio -L stdin
 CSOUNDJACK=/usr/bin/csound -dm6 -+rtaudio=jack -dm6 -o devaudio -L stdin -B 2048
 OPENCV=-lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_video 
 SHAREDFLAGS=-DSDL=1 -lGL -lglut -lSDL -lfreenect -lm `pkg-config --cflags sdl` `pkg-config --cflags libfreenect` `pkg-config --libs sdl` `pkg-config --libs libfreenect` `pkg-config --cflags opencv` `pkg-config --libs opencv`
@@ -15,6 +15,8 @@ difference: difference.c
 
 play:	glview2
 	./glview2 | perl filter.pl | $(CSOUND) sine2.orc sine2.sco
+playjack:	glview2
+	./glview2 | perl filter.pl | $(CSOUNDJACK) sine2-44100.orc sine2.sco
 playfm:	glview2
 	./glview2 | perl simple-filter.pl | $(CSOUND) fm-xy.orc fm-xy.sco
 playfmjack:	glview2
