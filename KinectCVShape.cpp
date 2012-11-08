@@ -356,6 +356,23 @@ void DrawScene()
 		double theta = gdegree * (pi / 180.0f);
 		double xprime = len * cos( theta ) - 0 * sin(theta);
 		double yprime = len * sin( theta ) + 0 * cos(theta);
+		#define NSamples 100
+		int samples[NSamples];
+		for (int i = 0; i < NSamples; i++) {
+			int x = WIDTH/2 + i*xprime/(NSamples - 1);
+			int y = HEIGHT/2 + i*yprime/(NSamples - 1);
+			int sample = depth_map[x + y * WIDTH];
+			samples[i] = sample;
+		}
+                fprintf(stdout,"\t\"samples\":[");
+		for (int i = 0; i < NSamples; i++) {
+			if (i == 0) {
+				fprintf(stdout,"%d", samples[i]);
+			} else {
+				fprintf(stdout,",%d", samples[i]);
+			}
+		}
+                fprintf(stdout,"],\t");
 
 		//Scalar sca(1.0*WIDTH/2,1.0*HEIGHT/2-len,1.0);
 		//Mat segment(3, 1, CV_64F, sca);
