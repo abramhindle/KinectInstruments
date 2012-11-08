@@ -54,6 +54,10 @@ playSkel:
 
 KinectCV:	KinectCV.cpp
 	$(CPP) KinectCV.cpp -o KinectCV $(SHAREDFLAGS)
+
+KinectCVShape:	KinectCVShape.cpp
+	$(CPP) KinectCVShape.cpp -o KinectCVShape $(SHAREDFLAGS)
+
 play-KinectCV:	KinectCV
 	./KinectCV | perl json-stats.pl | $(CSOUND) harmonics.orc harmonics.sco
 play-KinectCVJack:	KinectCV
