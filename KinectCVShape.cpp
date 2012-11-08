@@ -33,7 +33,7 @@
 	- [X] Manipulate Threshold
 	
 */
-
+static const double pi = 3.14159265358979323846;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,6 +147,9 @@ int object_depth = 500;
 int ghit = 0;
 int win = 0;
 int wotime = 0;
+
+int gdegree = 0;
+int gtempo = 1;
 
 #define MYCVTYPE CV_32S
 //define MYCVTYPE CV_32F
@@ -338,7 +341,7 @@ void DrawScene()
                 cv::HuMoments( mo, hu );
                 fprintf(stdout,"\t\"hu\":[%e,%e,%e,%e,%e,%e],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
 
-		
+		// contour stuff
 		vector<vector<Point> > contours;
 		findContours( gray, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
 
@@ -346,8 +349,26 @@ void DrawScene()
 		Mat dst(HEIGHT, WIDTH, CV_8UC3, color_diff_depth_map);
 		drawContours(  dst , contours, -1, color, 3);
 
-		line( dst, Point2f(WIDTH/2, HEIGHT/2), Point2f(0,0), Scalar(255,0,0)); 
 
+		gdegree = (gdegree + gtempo) % 360;
+		const int len = min(WIDTH,HEIGHT)/2;
+
+		double theta = gdegree * (pi / 180.0f);
+		double xprime = len * cos( theta ) - 0 * sin(theta);
+		double yprime = len * sin( theta ) + 0 * cos(theta);
+
+		//Scalar sca(1.0*WIDTH/2,1.0*HEIGHT/2-len,1.0);
+		//Mat segment(3, 1, CV_64F, sca);
+		//Mat rot_mat = getRotationMatrix2D( Point2f(WIDTH/2,HEIGHT/2), gdegree * (pi / 180.0f), 1.0);
+		//Mat ourLine = rot_mat * segment;
+		//fprintf(stdout,"\n%d %d %d %d %f %f\n", len, gdegree, ourLine.rows, ourLine.cols, ourLine.at<double>(0,0), ourLine.at<double>(1,0));
+		
+		//warpAffine(segment, ourLine, rot_mat, segment.size());
+		//double x = ourLine.at<double>(0,0);
+		//double y = ourLine.at<double>(1,0);
+		line( dst, Point2f(WIDTH/2, HEIGHT/2), Point2f(WIDTH/2 + xprime, HEIGHT/2 + yprime), Scalar(0,0,255)); 
+		//line( dst, Point2f(segment.row(0)), Point2f(ourLine.row(0)), Scalar(0,0,255)); 
+		
 
                 const int hSize = 8;
                 const int arr[] = { hSize };
