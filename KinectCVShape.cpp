@@ -383,7 +383,7 @@ void DrawScene()
 		//warpAffine(segment, ourLine, rot_mat, segment.size());
 		//double x = ourLine.at<double>(0,0);
 		//double y = ourLine.at<double>(1,0);
-		line( dst, Point2f(WIDTH/2, HEIGHT/2), Point2f(WIDTH/2 + xprime, HEIGHT/2 + yprime), Scalar(0,0,255)); 
+		line( dst, Point2f(WIDTH/2, HEIGHT/2), Point2f(WIDTH/2 + xprime, HEIGHT/2 + yprime), Scalar(0,0,255), 4); 
 		//line( dst, Point2f(segment.row(0)), Point2f(ourLine.row(0)), Scalar(0,0,255)); 
 		
 
@@ -836,6 +836,10 @@ int main(int argc, char **argv)
 		exit(0);               
               } else if (e.key.keysym.sym == SDLK_ESCAPE) { //Escape
 		exit(0);               
+              } else if (e.key.keysym.sym == 'k') {
+              	gtempo--;
+              } else if (e.key.keysym.sym == 'l') {
+              	gtempo++;
               } else if (e.key.keysym.sym == 'h') {
               	gthreshold=(gthreshold>1024-10)?1024:(gthreshold+10);
               } else if (e.key.keysym.sym == 'j') {
