@@ -82,7 +82,12 @@ while (my $line = <>) {
     #}
     my $index = 0;
     foreach my $sample (@{$h->{samples}}) {
-	cs('666', 0,0, $index, ($sample >= 512)?100*(2048-($sample-512))/2048.0:0, 60*($index + 1));
+	#if ($sample >= 300) {
+	#cs('666', rand(0.1),1, $index, ($sample >= 300)?100*(2048-($sample-300))/2048.0:0, 20*($index + 1));
+	#}
+	if ($sample >= 300) {
+		cs('777', rand(0.1),0.1, $index, ($sample >= 300)?300*(2048-($sample-300))/2048.0:0, 40+exp(1.0+$index/12.0));#10*($index + 1));
+	}
 	$index++;
     }
     $lastTime = $time;

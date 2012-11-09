@@ -14,8 +14,8 @@ a1	oscili	kamp, kpitch, 1
 	endin
 
         instr 666
-;p3      =     1/44100
-p3      =     1.0/88200
+p3      =     1/44100
+;p3      =     1.0/88200
 iindex  =     p4	; index
 iloud   =     p5	; 
 ipitch  =     p6     ;
@@ -23,8 +23,23 @@ itableamp =   2
 itablepitch = 3
 tableiw     iloud  , iindex, itableamp,   0, 0, 0 
 tableiw     ipitch , iindex, itablepitch, 0, 0, 0 
-turnoff
 endin
+
+
+        instr 777
+;p3      =     1/44100
+p3      =     3/19.0
+idur    = p3
+iindex  =     p4	; index
+iloud   =     p5	; 
+ipitch  =     p6     ;
+;ifenv  = 51                    ; bell settings:
+ifenv  = 53                    ; bell settings:
+aenv    oscili  1, 1/idur, ifenv             ; envelope
+a1	oscili	iloud, ipitch, 1
+out a1*aenv
+endin
+
 
 ; p4 is 0-30000 
 ; p5 is 20-20000
