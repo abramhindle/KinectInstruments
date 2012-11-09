@@ -23,6 +23,7 @@ itableamp =   2
 itablepitch = 3
 tableiw     iloud  , iindex, itableamp,   0, 0, 0 
 tableiw     ipitch , iindex, itablepitch, 0, 0, 0 
+turnoff
 endin
 
 ; p4 is 0-30000 

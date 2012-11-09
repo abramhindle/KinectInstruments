@@ -58,6 +58,9 @@ KinectCV:	KinectCV.cpp
 KinectCVShape:	KinectCVShape.cpp
 	$(CPP) KinectCVShape.cpp -o KinectCVShape $(SHAREDFLAGS)
 
+play-shape: KinectCVShape
+	./KinectCVShape | perl vocode.pl | csound -dm6 -L stdin -o devaudio 100sine.orc 100sine.sco
+
 play-KinectCV:	KinectCV
 	./KinectCV | perl json-stats.pl | $(CSOUND) harmonics.orc harmonics.sco
 play-KinectCVJack:	KinectCV

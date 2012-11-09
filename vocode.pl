@@ -13,7 +13,7 @@ my $frames = 0;
 my $lastTime = time();
 while (my $line = <>) {
     chomp;
-    warn "Got $line";
+    #warn "Got $line";
     my $time = time();
     my $fps = 1 / (0.0001 + $time - $lastTime);#$frames++ / ($time - $startTime);
     $frames++;
@@ -82,7 +82,7 @@ while (my $line = <>) {
     #}
     my $index = 0;
     foreach my $sample (@{$h->{samples}}) {
-	cs('666', 0,0, $index, ($sample >= 512)?(1024-($sample-512)):0, 30*($index + 1));
+	cs('666', 0,0, $index, ($sample >= 512)?100*(2048-($sample-512))/2048.0:0, 60*($index + 1));
 	$index++;
     }
     $lastTime = $time;
