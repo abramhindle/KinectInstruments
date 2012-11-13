@@ -325,18 +325,34 @@ void DrawScene()
 
                 Scalar mean;
                 Scalar stddev;
+                // has a mask..
                 meanStdDev(depthFrame, mean, stddev);
                 fprintf(stdout,"\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
 
-
+                
 
                 Mat gray(HEIGHT, WIDTH, CV_8U);
                 depthFrame.convertTo( gray, CV_8U);
                 Moments mo = cv::moments( gray );
 
+                Scalar diffMean;
+                Scalar diffSTD ;
+                Mat diffGray;
+                {
+                  Mat tmpGray1 = gray.colRange(0,WIDTH-1);
+                  Mat tmpGray2 = gray.colRange(1,WIDTH);
+                  diffGray = tmpGray2 - tmpGray1;
+                  meanStdDev(diffGray, diffMean, diffSTD);
+                  fprintf(stdout,"\t\"diffMean\":%e,\"diffSTD\":%e,\t", diffMean[0], diffSTD[0]);
+                }
+
+
                 fprintf(stdout,"\t\"spacial-moments\":[%e,%e,%e,%e,%e,%e,%e,%e,%e,%e],\t",
                        mo.m00, mo.m10, mo.m01, mo.m20, mo.m11, mo.m02, mo.m30, mo.m21, mo.m12, mo.m03);
                 fprintf(stdout,"\t\"central-moments\":[%e,%e,%e,%e,%e,%e,%e],\t", mo.mu20, mo.mu11, mo.mu02, mo.mu30, mo.mu21, mo.mu12, mo.mu03);
+
+
+
                 double hu[7];
                 cv::HuMoments( mo, hu );
                 fprintf(stdout,"\t\"hu\":[%e,%e,%e,%e,%e,%e],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
