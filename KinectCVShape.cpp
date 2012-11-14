@@ -229,6 +229,28 @@ void calcStatsForRegion( int * map, double * avg, int * sum, int startx, int sta
   *sum = summation;
 }
 
+double semivariogram(Mat & m, int n) {
+  // https://en.wikipedia.org/wiki/Variogram
+  int x[n];
+  int y[n];
+  for (int i = 0 ; i < n; i++) {
+    x[i] = rand() % WIDTH;
+    y[i] = rand() % HEIGHT;
+  }
+  Mat dist( n, n, CV_32F);
+  for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+      double v = m(x[i],y[i]) - m(x[j],y[j]);      
+      dist[i][j] = v * v;
+      dist[j][i] = dist[i][j];
+    }
+  }
+  Scalar mean;
+  Scalar std;
+  meanStdDev( dist, mean, std ); // 1/N * sum( dists squared )
+  return mean[0];
+}
+
 
 static int dfirst = 1;
 void DrawScene()
@@ -334,6 +356,9 @@ void DrawScene()
                 Mat gray(HEIGHT, WIDTH, CV_8U);
                 depthFrame.convertTo( gray, CV_8U);
                 Moments mo = cv::moments( gray );
+                double svariogram = semivariogram( depthFrame, 1000 );
+                fprintf( stdout, "\t\"semivariogram\":%e,\t", svariogram );
+
 
                 Scalar diffMean;
                 Scalar diffSTD ;
@@ -692,6 +717,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp)
 	pthread_cond_signal(&gl_frame_cond);
 	pthread_mutex_unlock(&gl_backbuf_mutex);
 }
+
 
 void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
