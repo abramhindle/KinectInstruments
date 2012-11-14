@@ -240,7 +240,7 @@ double semivariogram(Mat & m, int n) {
   float dist[n][n];
   for (int i = 0; i < n; i++) {
     for (int j = i; j < n; j++) {
-      float v = m.at<float>(x[i],y[i]) - m.at<float>(x[j],y[j]);      
+      float v = m.at<float>(y[i],x[i]) - m.at<float>(y[j],x[j]);      
       float v2 = v * v;
       dist[i][j] = v2;
       dist[j][i] = v2;
