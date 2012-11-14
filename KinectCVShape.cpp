@@ -240,19 +240,62 @@ double semivariogram(Mat & m, int n) {
   float dist[n][n];
   for (int i = 0; i < n; i++) {
     for (int j = i; j < n; j++) {
-      float v = m.at<float>(y[i],x[i]) - m.at<float>(y[j],x[j]);      
+      float v = m.at<int>(y[i],x[i]) - m.at<int>(y[j],x[j]);      
       float v2 = v * v;
       dist[i][j] = v2;
       dist[j][i] = v2;
     }
   }
-  Mat distm( n, n, CV_32F, dist );
+  Mat distm( n, n, CV_32F, dist, n * sizeof( float ) );
   Scalar mean;
   Scalar std;
   meanStdDev( distm, mean, std ); // 1/N * sum( dists squared )
-  return mean[0];
+  //fprintf(stderr, "MEAN: %e STD: %e \n", mean[0], std[0]);
+  return sqrt(mean[0]);
 }
 
+// this variogram is to deal with the fact that I don't like the 0s they are special values
+double semivariogram(Mat & m, int n, int minthreshold) {
+  // https://en.wikipedia.org/wiki/Variogram
+  int x[n];
+  int y[n];
+  for (int i = 0 ; i < n; i++) {
+    x[i] = rand() % WIDTH;
+    y[i] = rand() % HEIGHT;
+  }
+  float dist[n][n];
+  for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+      int d1 = m.at<int>(y[i],x[i]);
+      int d2 = m.at<int>(y[j],x[j]);      
+      float v =  (d1 < minthreshold || d2 < minthreshold)?0.0:(d1 - d2);
+      
+      float v2 = v * v;
+      dist[i][j] = v2;
+      dist[j][i] = v2;
+    }
+  }
+  Mat distm( n, n, CV_32F, dist, n * sizeof( float ) );
+  Scalar mean;
+  Scalar std;
+  meanStdDev( distm, mean, std ); // 1/N * sum( dists squared )
+  //fprintf(stderr, "MEAN: %e STD: %e \n", mean[0], std[0]);
+  return sqrt(mean[0]);
+}
+
+void mirrorDiff(Mat & m, double * meanout, double * stddevout) {
+  Mat mflip;
+  flip(m, mflip, 1); //flip around Y axis = 1, X = 0, -1 both
+  Scalar mean;
+  Scalar std;
+  //fprintf(stderr, "MEAN: %e STD: %e \n", mean[0], std[0]);
+  Mat diff;
+  absdiff( m, mflip, diff);
+  meanStdDev( diff, mean, std ); // 1/N * sum( dists squared )
+  //fprintf(stderr, "MEAN: %e STD: %e \n", mean[0], std[0]);
+  *meanout = mean[0];
+  *stddevout = std[0];
+}
 
 static int dfirst = 1;
 void DrawScene()
@@ -353,12 +396,17 @@ void DrawScene()
                 meanStdDev(depthFrame, mean, stddev);
                 fprintf(stdout,"\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
 
+
+                double mdiff;
+                double mstd; 
+                mirrorDiff( depthFrame, &mdiff, &mstd );
+                fprintf(stdout,"\t\"meanmirror\":%e,\"stdmirror\":%e,\t ", mdiff, mstd);
                 
 
                 Mat gray(HEIGHT, WIDTH, CV_8U);
                 depthFrame.convertTo( gray, CV_8U);
                 Moments mo = cv::moments( gray );
-                double svariogram = semivariogram( depthFrame, 1000 );
+                double svariogram = semivariogram( depthFrame, 1000, 256 );
                 svariogram = (svariogram != svariogram)?-666.0:svariogram;
                 fprintf( stdout, "\t\"semivariogram\":%e,\t", svariogram );
 
