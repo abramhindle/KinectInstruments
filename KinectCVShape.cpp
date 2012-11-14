@@ -237,17 +237,19 @@ double semivariogram(Mat & m, int n) {
     x[i] = rand() % WIDTH;
     y[i] = rand() % HEIGHT;
   }
-  Mat dist( n, n, CV_32F);
+  float dist[n][n];
   for (int i = 0; i < n; i++) {
     for (int j = i; j < n; j++) {
-      double v = m(x[i],y[i]) - m(x[j],y[j]);      
-      dist[i][j] = v * v;
-      dist[j][i] = dist[i][j];
+      float v = m.at<float>(x[i],y[i]) - m.at<float>(x[j],y[j]);      
+      float v2 = v * v;
+      dist[i][j] = v2;
+      dist[j][i] = v2;
     }
   }
+  Mat distm( n, n, CV_32F, dist );
   Scalar mean;
   Scalar std;
-  meanStdDev( dist, mean, std ); // 1/N * sum( dists squared )
+  meanStdDev( distm, mean, std ); // 1/N * sum( dists squared )
   return mean[0];
 }
 
@@ -357,6 +359,7 @@ void DrawScene()
                 depthFrame.convertTo( gray, CV_8U);
                 Moments mo = cv::moments( gray );
                 double svariogram = semivariogram( depthFrame, 1000 );
+                svariogram = (svariogram != svariogram)?-666.0:svariogram;
                 fprintf( stdout, "\t\"semivariogram\":%e,\t", svariogram );
 
 
