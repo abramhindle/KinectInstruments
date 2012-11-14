@@ -3,7 +3,7 @@ f 2  0  128 7 0 128 ; pitch
 f 3  0  128 7 0 128 ; amp
 f51 0 513 5 1 513 .0001 ; bell
 f52 0 513 5 1 513 .001 ; bell
-f53 0 8192 -20  1 ; hanning window
+f53 0 8192 -20  2 ; hanning window
 
 f 0 3600
 i1 0 3600 0

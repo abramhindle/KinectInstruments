@@ -65,6 +65,34 @@ while (my $line = <>) {
 
     pushAdd("hucps",$hucps);
 
+
+    # smoothness
+    my $diffMean = $h->{diffMean};
+    my $diffMean50 = rollAvg("diffMean",$fps);
+    
+    my $diffSTD = $h->{diffSTD};
+    my $diffSTD50 = rollAvg("diffSTD",$fps);
+
+    my $semivariogram = $h->{semivariogram};
+    my $semivariogram50 = rollAvg("semivariogram",$fps);
+    
+
+
+
+    # mirror
+
+    my $meanmirror = $h->{meanmirror};
+    my $meanmirror50 = rollAvg("meanmirror",$fps);
+    
+    my $stdmirror = $h->{stdmirror};
+    my $stdmirror50 = rollAvg("stdmirror",$fps);
+
+    
+    cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 40+$semivariogram, $semivariogram50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+    cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 1000+$meanmirror, $meanmirror50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1
+
+    # idea: one continuous tone with a bit of a LFO and then we can set both its pitch and its dissonance
+
     #if ($motion > $avgMotion) {
     #    cs('"DT3"', 0, 1.0, $amp, $cps);
     #}

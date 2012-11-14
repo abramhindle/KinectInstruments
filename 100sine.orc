@@ -62,3 +62,27 @@ instr bell
   a1    oscili  aenv, ifq1+amod, if1            ; carrier
         out     a1
 endin
+
+instr dissonant
+      idur = p3
+      iamp = p4
+      ibase = p5
+      inoise = p6 ; preferrably 0 to 1 but it will jostle the harmonics
+      ;      ipeak = max(ibase,p7)
+      knoise randi ibase,60
+      aenv     adsr 0.1*idur, 0.1*idur, 0.3*idur, 0.5*idur
+      asinewave1	oscili	iamp*(1/1), 1*ibase + inoise*(1-0)*knoise, 1
+      asinewave2	oscili	iamp*(1/2), 2*ibase + inoise*(2-0)*knoise, 1
+      asinewave3	oscili	iamp*(1/3), 3*ibase + inoise*(3-0)*knoise, 1
+      asinewave4	oscili	iamp*(1/4), 4*ibase + inoise*(4-0)*knoise, 1
+      asinewave5	oscili	iamp*(1/5), 5*ibase + inoise*(5-0)*knoise, 1
+      asinewave6	oscili	iamp*(1/6), 6*ibase + inoise*(6-0)*knoise, 1
+      asinewave7	oscili	iamp*(1/7), 7*ibase + inoise*(7-0)*knoise, 1
+
+      out aenv*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+endin
+
+
+
+
+
