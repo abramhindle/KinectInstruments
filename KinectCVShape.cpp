@@ -26,11 +26,13 @@
 
 /*
 	TODOS
-	- [ ] Centroid
-        - [ ] Line from center or centroid
+	- [X] Centroid
+        - [X] Line from center or centroid
         - [X] Tempo Control
 	- [X] Threshold
 	- [X] Manipulate Threshold
+        - [ ] Refactor real nice
+        - [ ] Add symmetry detector from java
 	
 */
 static const double pi = 3.14159265358979323846;
@@ -477,7 +479,7 @@ void DrawScene()
 		//double y = ourLine.at<double>(1,0);
 		line( dst, Point2f(WIDTH/2, HEIGHT/2), Point2f(WIDTH/2 + xprime, HEIGHT/2 + yprime), Scalar(0,0,255), 4); 
 		//line( dst, Point2f(segment.row(0)), Point2f(ourLine.row(0)), Scalar(0,0,255)); 
-		
+		flip(dst,dst,1);
 
                 const int hSize = 8;
                 const int arr[] = { hSize };
