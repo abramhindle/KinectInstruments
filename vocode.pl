@@ -93,6 +93,8 @@ while (my $line = <>) {
 
     # idea: one continuous tone with a bit of a LFO and then we can set both its pitch and its dissonance
 
+    # idea: get the convex hull of the contours and simplify it. Then output the polygon.
+
     #if ($motion > $avgMotion) {
     #    cs('"DT3"', 0, 1.0, $amp, $cps);
     #}
