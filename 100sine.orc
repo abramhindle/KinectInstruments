@@ -86,3 +86,27 @@ endin
 
 
 
+        instr Harmonic
+        ilen   = p3
+        iamp   = p4/(1+1/2+1/3+1/4+1/5+1/6+1/7+1/8)
+        istart = p5
+        itab   = (p6 > 0)?p6:1
+        iconstant = 1
+        iampconst = 10
+;            attack     decay      sustain, release
+aenvr   adsr 1*ilen/10, 6*ilen/10, 0.8, 3*ilen/10
+kvib    oscil 6,istart*50,1
+;kvib    = 0
+a0	oscil	iamp * 1/1, 1 * istart + iconstant*kvib, itab
+a1	oscil	iamp * 1/2, 2 * istart + iconstant*kvib, itab
+a2	oscil	iamp * 1/3, 3 * istart + iconstant*kvib, itab
+a3	oscil	iamp * 1/4, 4 * istart + iconstant*kvib, itab
+a4	oscil	iamp * 1/5, 5 * istart + iconstant*kvib, itab
+a5	oscil	iamp * 1/6, 6 * istart + iconstant*kvib, itab
+a6	oscil	iamp * 1/7, 7 * istart + iconstant*kvib, itab
+a7	oscil	iamp * 1/8, 8 * istart + iconstant*kvib, itab
+        asig = (a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7)
+        out asig*aenvr
+;        out     iamp/(1+1/2+1/3+1/4+1/5+1/6+1/7+1/8) * (a0 * a1 * a2 * a3 * a4 * a5 * a6 * a7)
+	endin
+

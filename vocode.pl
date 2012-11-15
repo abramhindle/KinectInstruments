@@ -94,6 +94,12 @@ while (my $line = <>) {
     # idea: one continuous tone with a bit of a LFO and then we can set both its pitch and its dissonance
 
     # idea: get the convex hull of the contours and simplify it. Then output the polygon.
+    my @hulls = @{$h->{hulls}};
+    foreach my $hull (@hulls) {
+        #area sides points anglestd anglemean
+        my $sides = $hull->{sides};
+        cs('"Harmonic"', rand(0.1),0.1+rand(1.0), 100, 1000-100*$sides );
+    }
 
     #if ($motion > $avgMotion) {
     #    cs('"DT3"', 0, 1.0, $amp, $cps);
@@ -118,10 +124,18 @@ while (my $line = <>) {
     }
     foreach my $sample (@{$h->{samples}}) {
 	#if ($sample >= 300) {
-	#cs('666', rand(0.1),1, $index, ($sample >= 300)?100*(2048-($sample-300))/2048.0:0, 20*($index + 1));
+        #cs('666', rand(0.1),1, $index, ($sample >= 300)?100*(2048-($sample-300))/2048.0:0, 20*($index + 1));	
 	#}
+        #cs('666', rand(0.1),0.1, $index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+
 	if ($sample >= 300) {
-		cs('777', rand(0.1),0.1, $index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+            #if (rand() > 0.7) {
+                #if (rand() > 0.5) {
+                    cs('777', rand(0.1),0.1, $index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+                #} else {
+                    #cs('"Harmonic"', rand(0.1),0.1, exp(5*scaleSample($sample))  ,20+exp(1.0+$index/12.0),1);#10*($index + 1));
+                #}
+            #}
 	}
 	$index++;
     }
