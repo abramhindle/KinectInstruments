@@ -153,6 +153,9 @@ int wotime = 0;
 int gdegree = 0;
 int gtempo = 1;
 
+bool gkeydown = false;
+char gkeysym = ' ';
+
 #define MYCVTYPE CV_32S
 //define MYCVTYPE CV_32F
 
@@ -581,6 +584,11 @@ void DrawScene()
                 
 
                 depthFrame.copyTo(lastDepthFrame);
+
+                if (gkeydown) {
+                  fprintf(stdout,",\"keydown\":\"%c\"", gkeysym);
+                  gkeydown = false;
+                }
                 
                 fprintf(stdout,"}\n");
 
@@ -979,6 +987,8 @@ int main(int argc, char **argv)
           while (SDL_PollEvent(&e)) {
             switch (e.type) {
             case SDL_KEYDOWN:
+              gkeydown = true;
+              gkeysym = e.key.keysym.sym;
               if (e.key.keysym.sym == 'x') {
 		exit(0);               
               } else if (e.key.keysym.sym == SDLK_ESCAPE) { //Escape

@@ -3,6 +3,30 @@
 	ksmps = 20
 	nchnls = 1
 
+gkdnoise init 0
+gkdbase init 60
+gkdamp init 1000
+
+        instr gkdnoiseset
+        p3 = 1/44100
+        gkdnoise = p4
+        turnoff
+        endin
+
+        instr gkdbaseset
+        p3 = 1/44100
+        gkdbase = p4
+        turnoff
+        endin
+
+        instr gkdampset
+        p3 = 1/44100
+        gkdamp = p4
+        turnoff
+        endin
+
+
+
 	instr	1
 iindex      =   p4
 itableamp   =   2
@@ -109,4 +133,19 @@ a7	oscil	iamp * 1/8, 8 * istart + iconstant*kvib, itab
         out asig*aenvr
 ;        out     iamp/(1+1/2+1/3+1/4+1/5+1/6+1/7+1/8) * (a0 * a1 * a2 * a3 * a4 * a5 * a6 * a7)
 	endin
+
+
+instr globaldissonant
+      idur = p3
+      knoise randi gkdbase,60
+      asinewave1	oscili	(1/1), 1*gkdbase + gkdnoise*(1-0)*knoise, 1
+      asinewave2	oscili	(1/2), 2*gkdbase + gkdnoise*(2-0)*knoise, 1
+      asinewave3	oscili	(1/3), 3*gkdbase + gkdnoise*(3-0)*knoise, 1
+      asinewave4	oscili	(1/4), 4*gkdbase + gkdnoise*(4-0)*knoise, 1
+      asinewave5	oscili	(1/5), 5*gkdbase + gkdnoise*(5-0)*knoise, 1
+      asinewave6	oscili	(1/6), 6*gkdbase + gkdnoise*(6-0)*knoise, 1
+      asinewave7	oscili	(1/7), 7*gkdbase + gkdnoise*(7-0)*knoise, 1
+
+      out gkdamp*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+endin
 

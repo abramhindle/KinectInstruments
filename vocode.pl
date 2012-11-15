@@ -11,6 +11,8 @@ open(my $fd,">","out.sco");
 my $frames = 0;
 #cs('"RepeatingGBEB"', 0, -1);
 my $lastTime = time();
+my $triggeredDissonance = 0;
+
 while (my $line = <>) {
     chomp;
     #warn "Got $line";
@@ -35,6 +37,11 @@ while (my $line = <>) {
             pushAdd( $name, $val );
         }
     }
+
+    if ($h->{keydown}) {
+        warn $h->{keydown};
+    }
+
     pushAdd( "mds", rollScaleScalar( "meandiff", $h->{meandiff}, 15*$fps ) );
     my $motion = rollAvg( "mds"  , $fps );
     pushAdd( "motion", $motion );
@@ -87,9 +94,20 @@ while (my $line = <>) {
     my $stdmirror = $h->{stdmirror};
     my $stdmirror50 = rollAvg("stdmirror",$fps);
 
+    if (!$triggeredDissonance) {
+        cs('"globaldissonant"',0,3600);
+        $triggeredDissonance = 1;
+    }
     
-    cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 40+$semivariogram, $semivariogram50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
-    cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 1000+$meanmirror, $meanmirror50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1
+    warn $meanmirror;
+    cs('"gkdnoiseset"', rand(0.01), 0.01, $semivariogram50/1000);
+    cs('"gkdbaseset"',rand(0.01),0.01, 440-400*$meanmirror50/1000);
+    cs('"gkdampset"',rand(0.01),0.01, $meanmirror);
+
+    #cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 40+$semivariogram, $semivariogram50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+    #cs('"dissonant"', rand(0.1), 0.1+rand(0.1), 8000, 1000+$meanmirror, $meanmirror50/1000);#$index, exp(5*scaleSample($sample)), 40+exp(1
+
+
 
     # idea: one continuous tone with a bit of a LFO and then we can set both its pitch and its dissonance
 
@@ -98,7 +116,7 @@ while (my $line = <>) {
     foreach my $hull (@hulls) {
         #area sides points anglestd anglemean
         my $sides = $hull->{sides};
-        cs('"Harmonic"', rand(0.1),0.1+rand(1.0), 100, 1000-100*$sides );
+        cs('"Harmonic"', rand(0.1),0.1, 100, 1000-100*$sides,1 );
     }
 
     #if ($motion > $avgMotion) {
@@ -131,7 +149,7 @@ while (my $line = <>) {
 	if ($sample >= 300) {
             #if (rand() > 0.7) {
                 #if (rand() > 0.5) {
-                    cs('777', rand(0.1),0.1, $index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
+            cs('777', rand(0.1),0.1, $index, exp(5*scaleSample($sample)), 40+exp(1.0+$index/12.0));#10*($index + 1));
                 #} else {
                     #cs('"Harmonic"', rand(0.1),0.1, exp(5*scaleSample($sample))  ,20+exp(1.0+$index/12.0),1);#10*($index + 1));
                 #}
