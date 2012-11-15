@@ -298,10 +298,26 @@ void mirrorDiff(Mat & m, double * meanout, double * stddevout) {
   *meanout = mean[0];
   *stddevout = std[0];
 }
+// From http://stackoverflow.com/questions/3486172/angle-between-3-points#3487062
+int getAngleABC( Point a, Point b, Point c )
+{
+  Point ab( b.x - a.x, b.y - a.y );
+  Point cb( b.x - c.x, b.y - c.y );
+
+  float dot = (ab.x * cb.x + ab.y * cb.y); // dot product
+  float cross = (ab.x * cb.y - ab.y * cb.x); // cross product
+  
+  float alpha = atan2(cross, dot);
+  
+  return (int) floor(alpha * 180. / pi + 0.5);
+}
 
 static int dfirst = 1;
+// Does everything
 void DrawScene()
 {
+  Vector<string> output(300);
+
 	pthread_mutex_lock(&gl_backbuf_mutex);
 
 	// When using YUV_RGB mode, RGB frames only arrive at 15Hz, so we shouldn't force them to draw in lock-step.
@@ -438,10 +454,46 @@ void DrawScene()
 		// contour stuff
 		vector<vector<Point> > contours;
 		findContours( gray, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+                //fprintf(stdout,"\t\"hulls\":[");
+                //bool first = true;
 
 		Scalar color( rand()&255, rand()&255, rand()&255 );	
 		Mat dst(HEIGHT, WIDTH, CV_8UC3, color_diff_depth_map);
-		drawContours(  dst , contours, -1, color, 3);
+		//drawContours(  dst , contours, -1, color, 3);
+
+                // get convex hulls
+                vector<vector<Point> >hulls ( contours.size() );
+                for( int i = 0; i < contours.size(); i++ ) {
+                  convexHull( Mat(contours[i]), hulls[i], false ); 
+                }
+                fprintf(stdout,"\t\"hulls\":[\t");
+                bool first = true;
+                for (int i = 0; i < contours.size(); i++) {
+                  double area = contourArea(hulls[i]);
+                  if ( area > 1024 ) {
+                    Scalar color( rand()&255, rand()&255, rand()&255 );	
+                    drawContours( dst, hulls, i, color, 3);//, 8, vector<Vec4i>(), 0, Point() );
+                    vector<Point> hull = hulls[i];
+                    fprintf(stdout,"%c{\"area\":%e,\"sides\":%d,\"points\":[",(first?' ':','), area, hull.size());
+                    int hullsize = hull.size();
+                    vector<double> angles( hullsize );
+                    for (int j = 0; j < hullsize; j++) {
+                      Point hx1 = hull[j];
+                      Point hx2 = hull[(j+1)%hullsize];
+                      Point hx3 = hull[(j+2)%hullsize];
+                      angles[j] = getAngleABC( hx1, hx2, hx3 );                     
+                      fprintf(stdout,"%c%d,%d,%f",((j==0)?' ':','),  hx1.x, hx1.y, angles[j]);
+
+                    }                 
+                    Scalar amean;
+                    Scalar astd;
+                    meanStdDev(angles, amean, astd);                    
+                    fprintf(stdout,"],\"anglemean\":%e,\"anglestd\":%e}\t", amean[0], astd[0]); 
+                    first = false;
+                  }
+                }
+                fprintf(stdout,"],\t"); 
+
 
 
 		gdegree = (gdegree + gtempo) % 360;
