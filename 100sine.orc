@@ -96,11 +96,15 @@ instr dissonant
       ibase = p5
       inoise = p6 ; preferrably 0 to 1 but it will jostle the harmonics
       ;      ipeak = max(ibase,p7)
+      inoise = (inoise > 1)?1:inoise
       ibasefreq random 1, 9
-      knoise lfo 1, 1/ibasefreq, 1
+      knoise lfo ibase, 1/ibasefreq, 1
       aenv     adsr 0.1*idur, 0.1*idur, 0.3*idur, 0.5*idur
       imin = 1
       imax = 7
+      adump  delayr 0.001+1/ibase      ; we ignore this value
+      adelay deltapi 0.01;1/ibase
+
       ires1 random imin, imax
       ires2 random imin, imax
       ires3 random imin, imax
@@ -109,7 +113,7 @@ instr dissonant
       ires6 random imin, imax
       ires7 random imin, imax
       itotal = 1/ires1 + 1/ires2 + 1/ires3 + 1/ires4 + 1/ires5 + 1/ires6 + 1/ires6
-      kinoise = inoise * (1 + knoise)
+      kinoise = inoise * (1 + abs(knoise))
       asinewave1	oscili	iamp*(1/ires1), 1*(ibase + kinoise), 1
       asinewave2	oscili	iamp*(1/ires2), 2*(ibase + kinoise), 1
       asinewave3	oscili	iamp*(1/ires3), 3*(ibase + kinoise), 1
@@ -117,8 +121,46 @@ instr dissonant
       asinewave5	oscili	iamp*(1/ires5), 5*(ibase + kinoise), 1
       asinewave6	oscili	iamp*(1/ires6), 6*(ibase + kinoise), 1
       asinewave7	oscili	iamp*(1/ires7), 7*(ibase + kinoise), 1
+      asum = (1/itotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + inoise * adelay / 8
+      delayw asum                 
+      out aenv * asum 
+endin
 
-      out aenv*(1/itotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+
+instr dissonant2
+      idur = p3
+      iamp = p4
+      ibase = p5
+      inoise = p6 ; preferrably 0 to 1 but it will jostle the harmonics
+      ;      ipeak = max(ibase,p7)
+      inoise = (inoise > 1)?1:inoise
+      ibasefreq random 1, 9
+      knoise lfo ibase, 1/ibasefreq, 1
+      aenv     adsr 0.1*idur, 0.1*idur, 0.3*idur, 0.5*idur
+      imin = 1
+      imax = 7
+      adump  delayr 0.001+1/ibase      ; we ignore this value
+      adelay deltapi 0.01;1/ibase
+
+      kres1 randomh imin, imax, 1/ibasefreq
+      kres2 randomh imin, imax, 1/ibasefreq
+      kres3 randomh imin, imax, 1/ibasefreq
+      kres4 randomh imin, imax, 1/ibasefreq
+      kres5 randomh imin, imax, 1/ibasefreq
+      kres6 randomh imin, imax, 1/ibasefreq
+      kres7 randomh imin, imax, 1/ibasefreq
+      ktotal = 1/kres1 + 1/kres2 + 1/kres3 + 1/kres4 + 1/kres5 + 1/kres6 + 1/kres6
+      kinoise = inoise * (1 + abs(knoise))
+      asinewave1	oscili	iamp*(1/kres1), 1*(ibase + kinoise), 1
+      asinewave2	oscili	iamp*(1/kres2), 2*(ibase + kinoise), 1
+      asinewave3	oscili	iamp*(1/kres3), 3*(ibase + kinoise), 1
+      asinewave4	oscili	iamp*(1/kres4), 4*(ibase + kinoise), 1
+      asinewave5	oscili	iamp*(1/kres5), 5*(ibase + kinoise), 1
+      asinewave6	oscili	iamp*(1/kres6), 6*(ibase + kinoise), 1
+      asinewave7	oscili	iamp*(1/kres7), 7*(ibase + kinoise), 1
+      asum = (1/ktotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + inoise * adelay / 8
+      delayw asum                 
+      out aenv * asum 
 endin
 
 
