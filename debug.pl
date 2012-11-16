@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use List::Util qw(shuffle sum min max);
 use JSON;
+use Data::Dumper;
 use strict;
 use Time::HiRes qw(time);
 use Term::ANSIColor;
@@ -26,7 +27,7 @@ while (my $line = <STDIN>) {
         $h = decode_json $line;
         for my $attr (@attrs) {
             print color 'yellow';
-            print "$attr: ".$h->{$attr};
+            print "$attr: ".(ref($h->{$attr}))?Dumper($h->{$attr}):$h->{$attr};
             print color 'reset';
             print $/;
         }

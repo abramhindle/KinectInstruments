@@ -3,6 +3,9 @@
 	ksmps = 20
 	nchnls = 1
 
+maxalloc 777, 200
+maxalloc "Harmonic", 50
+maxalloc "bell", 100
 gkdnoise init 0
 gkdbase init 60
 gkdamp init 1000
@@ -93,17 +96,29 @@ instr dissonant
       ibase = p5
       inoise = p6 ; preferrably 0 to 1 but it will jostle the harmonics
       ;      ipeak = max(ibase,p7)
-      knoise randi ibase,60
+      ibasefreq random 1, 9
+      knoise lfo 1, 1/ibasefreq, 1
       aenv     adsr 0.1*idur, 0.1*idur, 0.3*idur, 0.5*idur
-      asinewave1	oscili	iamp*(1/1), 1*ibase + inoise*(1-0)*knoise, 1
-      asinewave2	oscili	iamp*(1/2), 2*ibase + inoise*(2-0)*knoise, 1
-      asinewave3	oscili	iamp*(1/3), 3*ibase + inoise*(3-0)*knoise, 1
-      asinewave4	oscili	iamp*(1/4), 4*ibase + inoise*(4-0)*knoise, 1
-      asinewave5	oscili	iamp*(1/5), 5*ibase + inoise*(5-0)*knoise, 1
-      asinewave6	oscili	iamp*(1/6), 6*ibase + inoise*(6-0)*knoise, 1
-      asinewave7	oscili	iamp*(1/7), 7*ibase + inoise*(7-0)*knoise, 1
+      imin = 1
+      imax = 7
+      ires1 random imin, imax
+      ires2 random imin, imax
+      ires3 random imin, imax
+      ires4 random imin, imax
+      ires5 random imin, imax
+      ires6 random imin, imax
+      ires7 random imin, imax
+      itotal = 1/ires1 + 1/ires2 + 1/ires3 + 1/ires4 + 1/ires5 + 1/ires6 + 1/ires6
+      kinoise = inoise * (1 + knoise)
+      asinewave1	oscili	iamp*(1/ires1), 1*(ibase + kinoise), 1
+      asinewave2	oscili	iamp*(1/ires2), 2*(ibase + kinoise), 1
+      asinewave3	oscili	iamp*(1/ires3), 3*(ibase + kinoise), 1
+      asinewave4	oscili	iamp*(1/ires4), 4*(ibase + kinoise), 1
+      asinewave5	oscili	iamp*(1/ires5), 5*(ibase + kinoise), 1
+      asinewave6	oscili	iamp*(1/ires6), 6*(ibase + kinoise), 1
+      asinewave7	oscili	iamp*(1/ires7), 7*(ibase + kinoise), 1
 
-      out aenv*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+      out aenv*(1/itotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
 endin
 
 
@@ -138,14 +153,18 @@ a7	oscil	iamp * 1/8, 8 * istart + iconstant*kvib, itab
 instr globaldissonant
       idur = p3
       knoise randi gkdbase,60
-      asinewave1	oscili	(1/1), 1*gkdbase + gkdnoise*(1-0)*knoise, 1
-      asinewave2	oscili	(1/2), 2*gkdbase + gkdnoise*(2-0)*knoise, 1
-      asinewave3	oscili	(1/3), 3*gkdbase + gkdnoise*(3-0)*knoise, 1
-      asinewave4	oscili	(1/4), 4*gkdbase + gkdnoise*(4-0)*knoise, 1
-      asinewave5	oscili	(1/5), 5*gkdbase + gkdnoise*(5-0)*knoise, 1
-      asinewave6	oscili	(1/6), 6*gkdbase + gkdnoise*(6-0)*knoise, 1
-      asinewave7	oscili	(1/7), 7*gkdbase + gkdnoise*(7-0)*knoise, 1
-
-      out gkdamp*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+      kres lfo 1, 1/7, 0
+      kbase = gkdbase + 10*kres
+      asinewave1	oscili	(1/1), 1*kbase + gkdnoise*(1-0)*knoise, 1
+      asinewave2	oscili	(1/2), 2*kbase + gkdnoise*(2-0)*knoise, 1
+      asinewave3	oscili	(1/3), 3*kbase + gkdnoise*(3-0)*knoise, 1
+      asinewave4	oscili	(1/4), 4*kbase + gkdnoise*(4-0)*knoise, 1
+      asinewave5	oscili	(1/5), 5*kbase + gkdnoise*(5-0)*knoise, 1
+      asinewave6	oscili	(1/6), 6*kbase + gkdnoise*(6-0)*knoise, 1
+      asinewave7	oscili	(1/7), 7*kbase + gkdnoise*(7-0)*knoise, 1
+      aout = (asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
+      ;      ares reson aout, kbase*4, gkdbase
+      ;asig balance ares, aout
+      out gkdamp*aout
 endin
 
