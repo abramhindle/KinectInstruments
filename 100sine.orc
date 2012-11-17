@@ -1,7 +1,7 @@
       	sr = 44100
 	kr = 2205       
 	ksmps = 20
-	nchnls = 1
+	nchnls = 2
 
 maxalloc 777, 300
 maxalloc "Harmonic", 100
@@ -34,7 +34,7 @@ itablepitch =   3
 kpitch  table iindex, itablepitch
 kamp    table iindex, itableamp
 a1	oscili	kamp, kpitch, 1
-	out	a1
+	outs	a1,a1
 	endin
 
         instr 666
@@ -61,7 +61,7 @@ ipitch  =     p6     ;
 ifenv  = 53                    ; bell settings:
 aenv    oscili  1, 1/idur, ifenv             ; envelope
 a1	oscili	iloud, ipitch, 1
-out a1*aenv
+outs a1*aenv,a(k(0))
 endin
 
 
@@ -84,7 +84,7 @@ instr bell
   amod  oscili  adyn, ifq2, if2                 ; modulator
   
   a1    oscili  aenv, ifq1+amod, if1            ; carrier
-        out     a1
+        outs     a(k(0)),a1
 endin
 
 instr dissonant
@@ -120,7 +120,7 @@ instr dissonant
       asinewave7	oscili	iamp*(1/ires7), 7*(ibase + kinoise), 1
       asum = (1/itotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + inoise * adelay / 8
       delayw asum                 
-      out aenv * asum 
+      outs aenv * asum,a(k(0))
 endin
 
 
@@ -157,7 +157,7 @@ instr dissonant2
       asinewave7	oscili	iamp*(1/kres7), 7*(ibase + kinoise), 1
       asum = (1/ktotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + inoise * adelay / 8
       delayw asum                 
-      out aenv * asum 
+      outs a(k(0)),aenv * asum 
 endin
 
 
@@ -184,7 +184,7 @@ a5	oscil	iamp * 1/6, 6 * istart + iconstant*kvib, itab
 a6	oscil	iamp * 1/7, 7 * istart + iconstant*kvib, itab
 a7	oscil	iamp * 1/8, 8 * istart + iconstant*kvib, itab
         asig = (a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7)
-        out asig*aenvr
+        outs a(k(0)),asig*aenvr
 ;        out     iamp/(1+1/2+1/3+1/4+1/5+1/6+1/7+1/8) * (a0 * a1 * a2 * a3 * a4 * a5 * a6 * a7)
 	endin
 
@@ -204,7 +204,7 @@ instr globaldissonant
       aout = (asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/7
       ;      ares reson aout, kbase*4, gkdbase
       ;asig balance ares, aout
-      out gkdamp*aout
+      outs gkdamp*aout,a(k(0))
 endin
 
 
@@ -236,11 +236,11 @@ instr globaldissonant2
       asinewave7	oscili	(1/kres7), 7*(gkdbase + kinoise), 1
       asum = (1/ktotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + kgkdnoise * adelay / 8
       delayw asum                 
-      out asum * gkdamp 
+      outs a(k(0)),asum * gkdamp 
 endin
 instr globaltest
       kbase = gkdbase
       kamp = gkdamp
       asinewave1	oscili	kamp, kbase, 1
-      out asinewave1
+      outs a(k(0)),asinewave1
 endin
