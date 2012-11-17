@@ -11,19 +11,16 @@ gkdbase init 60
 gkdamp init 1000
 
         instr gkdnoiseset
-        p3 = 1/44100
         gkdnoise = p4
-        turnoff
+        turnoff       
         endin
 
         instr gkdbaseset
-        p3 = 1/44100
         gkdbase = p4
-        turnoff
+        turnoff       
         endin
 
         instr gkdampset
-        p3 = 1/44100
         gkdamp = p4
         turnoff
         endin
@@ -210,3 +207,40 @@ instr globaldissonant
       out gkdamp*aout
 endin
 
+
+instr globaldissonant2
+      idur = p3
+      kgkdnoise = (gkdnoise > 1)?1:gkdnoise
+      kdbasefreq randomh 1, 9, 1
+      knoise lfo gkdbase, 1/kdbasefreq, 1
+      imin = 1
+      imax = 7
+      adump  delayr 0.001+1      ; we ignore this value
+      adelay deltapi 0.01;1/gkdbase
+
+      kres1 randomh imin, imax, 1/kdbasefreq
+      kres2 randomh imin, imax, 1/kdbasefreq
+      kres3 randomh imin, imax, 1/kdbasefreq
+      kres4 randomh imin, imax, 1/kdbasefreq
+      kres5 randomh imin, imax, 1/kdbasefreq
+      kres6 randomh imin, imax, 1/kdbasefreq
+      kres7 randomh imin, imax, 1/kdbasefreq
+      ktotal = 1/kres1 + 1/kres2 + 1/kres3 + 1/kres4 + 1/kres5 + 1/kres6 + 1/kres6
+      kinoise = kgkdnoise * (1 + abs(knoise))
+      asinewave1	oscili	(1/kres1), 1*(gkdbase + kinoise), 1
+      asinewave2	oscili	(1/kres2), 2*(gkdbase + kinoise), 1
+      asinewave3	oscili	(1/kres3), 3*(gkdbase + kinoise), 1
+      asinewave4	oscili	(1/kres4), 4*(gkdbase + kinoise), 1
+      asinewave5	oscili	(1/kres5), 5*(gkdbase + kinoise), 1
+      asinewave6	oscili	(1/kres6), 6*(gkdbase + kinoise), 1
+      asinewave7	oscili	(1/kres7), 7*(gkdbase + kinoise), 1
+      asum = (1/ktotal)*(asinewave1 + asinewave2 + asinewave3 + asinewave4 + asinewave5 + asinewave6 + asinewave7)/8 + kgkdnoise * adelay / 8
+      delayw asum                 
+      out asum * gkdamp 
+endin
+instr globaltest
+      kbase = gkdbase
+      kamp = gkdamp
+      asinewave1	oscili	kamp, kbase, 1
+      out asinewave1
+endin

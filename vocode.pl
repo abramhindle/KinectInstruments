@@ -112,17 +112,17 @@ while (my $line = <>) {
     my $stdmirror50 = rollAvg("stdmirror",$fps);
 
     if (!$triggeredDissonance) {
-        cs('"globaldissonant"',0,3600);
+        cs('"globaldissonant2"',0,3600);
         $triggeredDissonance = 1;
     }
     
     warn $meanmirror;
 
     if ($dissonant) {
-        cs('"gkdnoiseset"', rand(0.01), 0.01, rollScaleScalar("semivariogram",$semivariogram50,60*15));
-        cs('"gkdbaseset"',rand(0.01),0.01, 440-400*$meanmirror50/1000);
+        cs('"gkdnoiseset"', rand(0.01), 0.01, max(0,rollScaleScalar("meanmirror",$meanmirror50,60*15)-0.1));
+        cs('"gkdbaseset"',rand(0.01),0.01, 1280-1200*rollScaleScalar("semivariogram",$semivariogram50,60*15));
         #cs('"gkdampset"',rand(0.01),0.01, 100 - 100*rollScaleScalar("meanmirror",$meanmirror-$meanmirror,600*15));
-        cs('"gkdampset"',rand(0.01),0.01, 500);
+        cs('"gkdampset"',rand(0.01),0.01, 1000);
     } else {
         cs('"gkdampset"',rand(0.01),0.01, 0);
     }

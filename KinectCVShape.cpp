@@ -977,7 +977,7 @@ int main(int argc, char **argv)
 #ifdef SDL
 
         sdlSurface = SDL_SetVideoMode(WIDTH , HEIGHT, 24, 0); 
-        SDL_WM_SetCaption("Goop",0);
+        SDL_WM_SetCaption("Shape Of Sound",0);
         atexit(SDL_Quit);
         color_diff_depth_map = (uint8_t*) sdlSurface->pixels;
 
