@@ -3,8 +3,8 @@
 	ksmps = 20
 	nchnls = 1
 
-maxalloc 777, 200
-maxalloc "Harmonic", 50
+maxalloc 777, 300
+maxalloc "Harmonic", 100
 maxalloc "bell", 100
 gkdnoise init 0
 gkdbase init 60
