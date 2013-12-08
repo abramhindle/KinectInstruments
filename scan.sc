@@ -15,7 +15,7 @@ s.scope;
 	});
 	o	
 };
-~int8ArrayToInt32Array.(Int8Array[ -112, 3, 0 , 0, -112, 3, 0 , 0])
+~int8ArrayToInt32Array.(Int8Array[ -112, 3, 0 , 0, -112, 3, 0 , 0]);
 
 ~int8ArrayToInt32ArrayTest = {
 	~arr = Int8Array[-112, 3, 0, 0];
@@ -28,9 +28,45 @@ s.scope;
 	~int8to32l.(~arr).postln;
 };
 
-~oscport = 57120;
-n = NetAddr("127.0.0.1", ~oscport); // local machine
-m = NetAddr("127.0.0.1", ~oscport); // local machine
-OSCFunc.newMatching({|msg| "My Listener".postln; ~int8ArrayToInt32Array.(msg[1]).postln}, '/samples');
+//~oscport = 57120;
+//n = NetAddr("127.0.0.1", ~oscport); // local machine
+//m = NetAddr("127.0.0.1", ~oscport); // local machine
+//OSCFunc.newMatching({|msg| "My Listener".postln; ~int8ArrayToInt32Array.(msg[1]).postln}, '/samples');
+
+
+
+(
+SynthDef('help-dynKlang', {| freqs, amps, phases |
+    Out.ar(0, DynKlang.ar(`[freqs, amps, phases]))
+}).add
+)
+
+~arraysmaller = { |n,arr|
+	var size = arr.size;
+	Array.fill(n, {|i| arr[(size) * i/n]})
+};
+~arraysmaller.(10, Array.fill(100,{|i| i}));
+
+~n = 10;
+~freqs = Array.fill(~n, {|i| 20 + (i*50.0)});
+~phases = Array.fill(~n, {|i| 1.0*i/~n})]);
+a = Synth('help-dynKlang',[
+	freqs: ~freqs,
+	amps: Array.fill(~n, {0}),
+	phases: ~phases]);
+a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+
+
+~myKlangResponder = {
+	|arr|
+	a.setn(\freqs, ~freqs,
+           \phases, ~phases,
+           \amps, (~arraysmaller.(~n, arr)/1024));
+};
+
+
+OSCFunc.newMatching({|msg| "My Klang Listener".postln; ~myKlangResponder.( ~int8ArrayToInt32Array.(msg[1]))}, '/samples');
 
 
