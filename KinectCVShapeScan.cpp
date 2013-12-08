@@ -47,13 +47,21 @@ static const double pi = 3.14159265358979323846;
 #include <highgui.h>
 #include <vector>
 
+#include "lo/lo.h"
+
+#define ADDRESS "127.0.0.1"
+#define PORT 57120
+
+
+
+
 #define WINDOW "mainWin"
 
 using namespace cv;
 using namespace std;
 
 
-
+// for OSC
 
 #define SDL 1
 
@@ -157,6 +165,8 @@ char gkeysym = ' ';
 
 cv::Mat lastDepthFrame(HEIGHT, WIDTH, MYCVTYPE);
 cv::Mat depthFrame(HEIGHT, WIDTH, MYCVTYPE);
+
+lo_address lo_t = lo_address_new("127.0.0.1", "57120");
 
 
 void clearBorders( int * map ) {
@@ -355,28 +365,30 @@ void DrawScene()
                 Mat depthFrame(HEIGHT,WIDTH, MYCVTYPE, depth_map, sizeof(int) * WIDTH);
                 
 
-                fprintf(stdout,"{ \"type\":\"frame\", \"frame\":%d, \"channels\":%d, \"BPP\":%d, \"W\":%d, \"H\":%d, \"WS\":%d, \"FPS\":%d, \"jmin\":%d, \"threshold\":%d,", //note lack ofnewline
-                        depth_frame,
-                        1,
-                        32,
-                        WIDTH,
-                        HEIGHT,
-                        WIDTH*sizeof(int), 
-                        30,
-                        jmin,
-                        gthreshold);
+                //fprintf(stdout,"{ \"type\":\"frame\", \"frame\":%d, \"channels\":%d, \"BPP\":%d, \"W\":%d, \"H\":%d, \"WS\":%d, \"FPS\":%d, \"jmin\":%d, \"threshold\":%d,", //note lack ofnewline
+               //         depth_frame,
+               //         1,
+               //         32,
+               //         WIDTH,
+               //         HEIGHT,
+               //         WIDTH*sizeof(int), 
+               //         30,
+               //         jmin,
+               //         gthreshold);
+
+                /*
 
                 Scalar mean;
                 Scalar stddev;
                 // has a mask..
                 meanStdDev(depthFrame, mean, stddev);
-                fprintf(stdout,"\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
+                //fprintf(stdout,"\t\"mean\":%e, \"std\":%e, ",mean[0],stddev[0]);
 
 
                 double mdiff;
                 double mstd; 
                 mirrorDiff( depthFrame, &mdiff, &mstd );
-                fprintf(stdout,"\t\"meanmirror\":%e,\"stdmirror\":%e,\t ", mdiff, mstd);
+                //fprintf(stdout,"\t\"meanmirror\":%e,\"stdmirror\":%e,\t ", mdiff, mstd);
                 
 
                 Mat gray(HEIGHT, WIDTH, CV_8U);
@@ -384,7 +396,7 @@ void DrawScene()
                 Moments mo = cv::moments( gray );
                 double svariogram = semivariogram( depthFrame, 1000, 256 );
                 svariogram = (svariogram != svariogram)?-666.0:svariogram;
-                fprintf( stdout, "\t\"semivariogram\":%e,\t", svariogram );
+                //fprintf( stdout, "\t\"semivariogram\":%e,\t", svariogram );
 
 
                 Scalar diffMean;
@@ -395,36 +407,41 @@ void DrawScene()
                   Mat tmpGray2 = gray.colRange(1,WIDTH);
                   diffGray = tmpGray2 - tmpGray1;
                   meanStdDev(diffGray, diffMean, diffSTD);
-                  fprintf(stdout,"\t\"diffMean\":%e,\"diffSTD\":%e,\t", diffMean[0], diffSTD[0]);
+                  //fprintf(stdout,"\t\"diffMean\":%e,\"diffSTD\":%e,\t", diffMean[0], diffSTD[0]);
                 }
 
+                */
 
-                fprintf(stdout,"\t\"spacial-moments\":[%e,%e,%e,%e,%e,%e,%e,%e,%e,%e],\t",
-                       mo.m00, mo.m10, mo.m01, mo.m20, mo.m11, mo.m02, mo.m30, mo.m21, mo.m12, mo.m03);
-                fprintf(stdout,"\t\"central-moments\":[%e,%e,%e,%e,%e,%e,%e],\t", mo.mu20, mo.mu11, mo.mu02, mo.mu30, mo.mu21, mo.mu12, mo.mu03);
+                //fprintf(stdout,"\t\"spacial-moments\":[%e,%e,%e,%e,%e,%e,%e,%e,%e,%e],\t",
+                //       mo.m00, mo.m10, mo.m01, mo.m20, mo.m11, mo.m02, mo.m30, mo.m21, mo.m12, mo.m03);
+                //fprintf(stdout,"\t\"central-moments\":[%e,%e,%e,%e,%e,%e,%e],\t", mo.mu20, mo.mu11, mo.mu02, mo.mu30, mo.mu21, mo.mu12, mo.mu03);
 
-
+                /*
 
                 double hu[7];
                 cv::HuMoments( mo, hu );
-                fprintf(stdout,"\t\"hu\":[%e,%e,%e,%e,%e,%e],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
+                //fprintf(stdout,"\t\"hu\":[%e,%e,%e,%e,%e,%e],\t", hu[0], hu[1],hu[2],hu[3],hu[4],hu[5],hu[6]);
 
 		// contour stuff
 		vector<vector<Point> > contours;
 		findContours( gray, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
-                //fprintf(stdout,"\t\"hulls\":[");
+                ////fprintf(stdout,"\t\"hulls\":[");
                 //bool first = true;
+
+                */
 
 		Scalar color( rand()&255, rand()&255, rand()&255 );	
 		Mat dst(HEIGHT, WIDTH, CV_8UC3, color_diff_depth_map);
 		//drawContours(  dst , contours, -1, color, 3);
+
+                /*
 
                 // get convex hulls
                 vector<vector<Point> >hulls ( contours.size() );
                 for( int i = 0; i < contours.size(); i++ ) {
                   convexHull( Mat(contours[i]), hulls[i], false ); 
                 }
-                fprintf(stdout,"\t\"hulls\":[\t");
+                //fprintf(stdout,"\t\"hulls\":[\t");
                 bool first = true;
                 for (int i = 0; i < contours.size(); i++) {
                   double area = contourArea(hulls[i]);
@@ -432,7 +449,7 @@ void DrawScene()
                     Scalar color( rand()&255, rand()&255, rand()&255 );	
                     drawContours( dst, hulls, i, color, 3);//, 8, vector<Vec4i>(), 0, Point() );
                     vector<Point> hull = hulls[i];
-                    fprintf(stdout,"%c{\"area\":%e,\"sides\":%d,\"points\":[",(first?' ':','), area, hull.size());
+                    //fprintf(stdout,"%c{\"area\":%e,\"sides\":%d,\"points\":[",(first?' ':','), area, hull.size());
                     int hullsize = hull.size();
                     vector<double> angles( hullsize );
                     for (int j = 0; j < hullsize; j++) {
@@ -440,26 +457,28 @@ void DrawScene()
                       Point hx2 = hull[(j+1)%hullsize];
                       Point hx3 = hull[(j+2)%hullsize];
                       angles[j] = getAngleABC( hx1, hx2, hx3 );                     
-                      fprintf(stdout,"%c%d,%d,%f",((j==0)?' ':','),  hx1.x, hx1.y, angles[j]);
+                      //fprintf(stdout,"%c%d,%d,%f",((j==0)?' ':','),  hx1.x, hx1.y, angles[j]);
 
                     }                 
                     Scalar amean;
                     Scalar astd;
                     meanStdDev(angles, amean, astd);                    
-                    fprintf(stdout,"],\"anglemean\":%e,\"anglestd\":%e}\t", amean[0], astd[0]); 
+                    //fprintf(stdout,"],\"anglemean\":%e,\"anglestd\":%e}\t", amean[0], astd[0]); 
                     first = false;
                   }
                 }
-                fprintf(stdout,"],\t"); 
+                //fprintf(stdout,"],\t"); 
 
 
+                */
 
 		gdegree = (gdegree + gtempo) % 360;
 		const int len = min(WIDTH,HEIGHT)/2;
 
-		double theta = gdegree * (pi / 180.0f);
-		double xprime = len * cos( theta ) - 0 * sin(theta);
-		double yprime = len * sin( theta ) + 0 * cos(theta);
+		//double theta = gdegree * (pi / 180.0f);
+		//double xprime = len * cos( theta ) - 0 * sin(theta);
+		//double yprime = len * sin( theta ) + 0 * cos(theta);
+                int xprime = WIDTH-1;
 		#define NSamples 100
 		int samples[NSamples];
 		for (int i = 0; i < NSamples; i++) {
@@ -468,7 +487,7 @@ void DrawScene()
 			int sample = depth_map[x + y * WIDTH];
 			samples[i] = sample;
 		}
-                fprintf(stdout,"\t\"samples\":[");
+                //fprintf(stdout,"\t\"samples\":[");
 		for (int i = 0; i < NSamples; i++) {
 			if (i == 0) {
 				fprintf(stdout,"%d", samples[i]);
@@ -476,12 +495,16 @@ void DrawScene()
 				fprintf(stdout,",%d", samples[i]);
 			}
 		}
-                fprintf(stdout,"],\t");
+                //fprintf(stdout,"],\t");
+                lo_blob btest = lo_blob_new(NSamples * sizeof(int), samples);
+                lo_send(lo_t, "/samples", "b", btest);
 
 		line( dst, Point2f(0, gyline), Point2f(WIDTH, gyline), Scalar(0,0,255), 4); 
 
 		flip(dst,dst,1);
 
+
+                /*
                 const int hSize = 8;
                 const int arr[] = { hSize };
                 const int * histSize = arr;
@@ -498,12 +521,12 @@ void DrawScene()
                 	              hist, 1, (const int*)histSize, (const float **)sranges,
                 	              true, // the histogram is uniform
                 	              false );
-                	fprintf(stdout,"\t\t\"hist\":[\t\t\t");
+                	//fprintf(stdout,"\t\t\"hist\":[\t\t\t");
                 	for( int h = 0; h < hSize; h++ ) {
                 	  float binVal = hist.at<float>(h, 0);
-                	  fprintf(stdout,"%s%e",((h==0)?"":","),binVal);
+                	  //fprintf(stdout,"%s%e",((h==0)?"":","),binVal);
                 	}
-                	fprintf(stdout,"]\t");
+                	//fprintf(stdout,"]\t");
                 } catch (exception &e) {
 			cout << e.what() << endl;
 		}
@@ -511,7 +534,7 @@ void DrawScene()
 
                 absdiff(depthFrame,lastDepthFrame,diff);
                 meanStdDev(diff, mean, stddev);
-                fprintf(stdout,"\t,\"meandiff\":%e, \"stddiff\":%e\t",mean[0],stddev[0]);
+                //fprintf(stdout,"\t,\"meandiff\":%e, \"stddiff\":%e\t",mean[0],stddev[0]);
 
 
 
@@ -520,25 +543,40 @@ void DrawScene()
                 Mat center( diff, Range(0,HEIGHT-1), Range(2*WIDTH/5, 4*WIDTH/5));
 
                 meanStdDev(left, mean, stddev);
-                fprintf(stdout,"\t,\"leftmean\":%e, \"leftstd\":%e ",mean[0],stddev[0]);
+                //fprintf(stdout,"\t,\"leftmean\":%e, \"leftstd\":%e ",mean[0],stddev[0]);
                 meanStdDev(right, mean, stddev);
-                fprintf(stdout,"\t,\"rightmean\":%e, \"rightstd\":%e ",mean[0],stddev[0]);
+                //fprintf(stdout,"\t,\"rightmean\":%e, \"rightstd\":%e ",mean[0],stddev[0]);
                 meanStdDev(center, mean, stddev);
-                fprintf(stdout,"\t,\"centermean\":%e, \"centerstd\":%e ",mean[0],stddev[0]);
+                //fprintf(stdout,"\t,\"centermean\":%e, \"centerstd\":%e ",mean[0],stddev[0]);
                 
+
+                */
 
                 depthFrame.copyTo(lastDepthFrame);
 
                 if (gkeydown) {
-                  fprintf(stdout,",\"keydown\":\"%c\"", gkeysym);
-                  gkeydown = false;
+                  //fprintf(stdout,",\"keydown\":\"%c\"", gkeysym);
+                  //gkeydown = false;
                 }
                 
-                fprintf(stdout,"}\n");
+                //fprintf(stdout,"}\n");
 
 
 		depth_frame++;
-		fflush( stdout );
+                //fflush( stdout );
+
+
+
+                //
+                //p << osc::BeginBundleImmediate
+                //<< osc::BeginMessage( "/samples" );
+                //for (int i = 0 ; i < NSamples; i++) {
+                //p << samples[i];
+                //}
+                //p << osc::EndMessage
+                //  << osc::EndBundle;
+                //transmitSocket.Send( p.Data(), p.Size() );
+
 	}
 	if (got_rgb) {
 		tmp = rgb_front;
@@ -872,6 +910,7 @@ int main(int argc, char **argv)
 		t_gamma[i] = v*6*256;
 	}
 
+
 	g_argc = argc;
 	g_argv = argv;
 
@@ -897,11 +936,19 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+        
+        
+
+
 	res = pthread_create(&freenect_thread, NULL, freenect_threadfunc, NULL);
 	if (res) {
 		printf("pthread_create failed\n");
 		return 1;
 	}
+
+
+
+
 
 #ifdef SDL
 
@@ -910,11 +957,15 @@ int main(int argc, char **argv)
         atexit(SDL_Quit);
         color_diff_depth_map = (uint8_t*) sdlSurface->pixels;
 
+        SDL_EnableKeyRepeat(30, 10);
 
         for(;;) {
           DrawScene();
           while (SDL_PollEvent(&e)) {
             switch (e.type) {
+            case SDL_KEYUP:
+              gkeydown = false;
+              break;
             case SDL_KEYDOWN:
               gkeydown = true;
               gkeysym = e.key.keysym.sym;
