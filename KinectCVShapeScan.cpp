@@ -495,6 +495,7 @@ void DrawScene()
 				fprintf(stdout,",%d", samples[i]);
 			}
 		}
+                fprintf(stdout,"\n");
                 //fprintf(stdout,"],\t");
                 lo_blob btest = lo_blob_new(NSamples * sizeof(int), samples);
                 lo_send(lo_t, "/samples", "b", btest);

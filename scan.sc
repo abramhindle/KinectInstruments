@@ -36,7 +36,10 @@ s.scope;
 
 
 (
-SynthDef('help-dynKlang', {| freqs, amps, phases |
+SynthDef('help-dynKlang', {| freqs=#[220, 440, 880, 1760],
+    amps=#[0.35, 0.23, 0.12, 0.05],
+    phases=#[1, 1.5, 2, 2.5]|
+
     Out.ar(0, DynKlang.ar(`[freqs, amps, phases]))
 }).add
 )
@@ -49,24 +52,85 @@ SynthDef('help-dynKlang', {| freqs, amps, phases |
 
 ~n = 10;
 ~freqs = Array.fill(~n, {|i| 20 + (i*50.0)});
-~phases = Array.fill(~n, {|i| 1.0*i/~n})]);
+~phases = Array.fill(~n, {|i| 1.0*i/~n});
+~phases = Array.fill(~n, {0});
 a = Synth('help-dynKlang',[
 	freqs: ~freqs,
 	amps: Array.fill(~n, {0}),
 	phases: ~phases]);
-a.setn(\amps, Array.rand(~n, 0.0, 0.1));
-a.setn(\amps, Array.rand(~n, 0.0, 0.1));
-a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+//a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+//a.setn(\amps, Array.rand(~n, 0.0, 0.1));
+//a.setn(\amps, Array.rand(~n, 0.0, 0.1));
 
 
 ~myKlangResponder = {
 	|arr|
+	var smaller = (~arraysmaller.(~n, arr)/1024);
+	smaller.postln;
+	~freqs.postln;
+	~phases.postln;
 	a.setn(\freqs, ~freqs,
            \phases, ~phases,
-           \amps, (~arraysmaller.(~n, arr)/1024));
+           \amps, smaller);
 };
 
+~myKlangResponder.([100,200,300,400,500,600,700,800,900,1000,1100]);
+~myKlangResponder.([0,0,0,0,500,0,0,0,0,0,0]);
 
 OSCFunc.newMatching({|msg| "My Klang Listener".postln; ~myKlangResponder.( ~int8ArrayToInt32Array.(msg[1]))}, '/samples');
 
 
+~mamp = [ 0.826171875, 0.853515625, 0, 0, 0, 0, 0, 0.6376953125, 0.3759765625, 0.3603515625 ];
+~mfreq = [ 20, 70, 120, 170, 220, 270, 320, 370, 420, 470 ];
+~mphase = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+
+SynthDef('myklang', {| freqs=#[30,40,80,120,160,200,300,400,500,600],
+    amps=#[0,0,0,0,0,0,0,0,0,0],
+    phases=#[0,0,0,0,0,0,0,0,0,0]|
+	Out.ar(0,
+		Mix.ar(
+			SinOsc.ar( freq: freqs, phase: phases, mul: amps)))
+}).add;
+
+SynthDef('myklang10', {|freqs=#[0,0,0,0,0,0,0,0,0,0],
+	amps=#[0,0,0,0,0,0,0,0,0,0],
+	phases=#[0,0,0,0,0,0,0,0,0,0]|
+	Out.ar(0,
+		Mix.ar(
+			SinOsc.ar( freq: freqs, phase: phases, mul: amps)))
+}).add;
+SynthDef('myklang100', {|freqs=#[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	amps=#[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	phases=#[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]|
+	Out.ar(0,
+		Mix.ar(
+			SinOsc.ar( freq: freqs, phase: phases, mul: amps)))
+}).add;
+
+
+
+~n = 100;
+~freqs = Array.fill(~n, {|i| 20 + (i*15.0)});
+~phases = Array.fill(~n, {|i| 1.0*i/~n});
+~phases = Array.fill(~n, {0});
+a = Synth('myklang100',[
+	freqs: ~freqs,
+	amps: Array.fill(~n, {1.0/~n}),
+	phases: ~phases]);
+//~freqs
+//a.setn(\freqs, Array.fill(~n, {|i| 1000.rand} ),
+//       \amps, Array.fill(~n, {|i| (i/~n).rand} ));
+a.setn(    \amps, Array.fill(~n, {|i| (i/~n).rand} ));
+~amps = Array.fill(~n, {|i| 0.0 });
+//~amps[~n-3] = 0.1;
+~amps;
+a.setn(\amps, ~amps);
+OSCFunc.newMatching({|msg| 
+	var out;
+	"My Klang 100 Listener".postln; 
+	out = ~int8ArrayToInt32Array.(msg[1])/1024.0/~n;
+	~amps = (~amps * 0.9) + (0.1 * out);
+	~amps.postln;
+	a.setn(\amps, ~amps,
+	       \freqs, ~freqs);
+}, '/samples');
