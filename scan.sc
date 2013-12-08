@@ -128,9 +128,11 @@ a.setn(\amps, ~amps);
 OSCFunc.newMatching({|msg| 
 	var out;
 	"My Klang 100 Listener".postln; 
-	out = ~int8ArrayToInt32Array.(msg[1])/1024.0/~n;
+	out = ~int8ArrayToInt32Array.(msg[1])/1024.0;
 	~amps = (~amps * 0.9) + (0.1 * out);
 	~amps.postln;
-	a.setn(\amps, ~amps,
-	       \freqs, ~freqs);
+	~freqs = ~amps * 1000;
+	a.setn(\freqs, ~freqs,
+		\amps, Array.fill(~n,{0.01}));
+	       
 }, '/samples');
