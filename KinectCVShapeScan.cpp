@@ -568,16 +568,6 @@ void DrawScene()
 
 
 
-                //
-                //p << osc::BeginBundleImmediate
-                //<< osc::BeginMessage( "/samples" );
-                //for (int i = 0 ; i < NSamples; i++) {
-                //p << samples[i];
-                //}
-                //p << osc::EndMessage
-                //  << osc::EndBundle;
-                //transmitSocket.Send( p.Data(), p.Size() );
-
 	}
 	if (got_rgb) {
 		tmp = rgb_front;
