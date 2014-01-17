@@ -1002,6 +1002,7 @@ int main(int argc, char **argv)
               m = e.motion;
               /* paint in the cursor on click */
                 if (m.state) {
+                  gyline = m.y;
                 } /* if state */
             } /* event type */
           } /* Poll */

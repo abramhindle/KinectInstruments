@@ -143,9 +143,35 @@ b.setn(\amps,Array.fill(~n, {|i| 0.01 }));
 //~amps[~n-3] = 0.1;
 //~amps;
 //a.setn(\amps, ~amps);
-OSCFunc.newMatching({|msg| 
+
+~scanned = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+~defaultplayer = { |v| ('freq': v).play };
+~bpm = 100;
+~bar = 10;
+~scanner = {
+	arg f=~defaultplayer;
+	var i = 0, v;
+	Routine {
+		loop {
+			//0.1.wait;
+			(60.0/~bpm/~bar).wait;		
+			v = ~scanned[i % ~scanned.size()];
+			if( v > 0, {
+				v.postln;
+				f.(v);
+				//('freq': v).play;
+			});
+			i = i + 1;
+		}
+	}.play;
+};
+60.0/100.0/10;
+~ss = ~scanner.();
+~scanned[23] = 66;
+~klanglistener = {|msg|
 	var out;
-	"My Klang 100 Listener".postln; 
+    //"My Klang 100 Listener".postln; 
 	// part a
 	out = ~int8ArrayToInt32Array.(msg[1])/1024.0;
 	~aold = (~aold * 0.9) + (0.1 * out);
@@ -156,5 +182,39 @@ OSCFunc.newMatching({|msg|
 	b.setn(
 		\out, 1,
 		\freqs, ~bfreqs,
-		\amps, ~bamp);	       
-}, '/samples');
+		\amps, ~bamp);
+};
+~scannerlistener = {|msg|
+	var out;
+    //"My Scanner Listener".postln; 
+	out = ~int8ArrayToInt32Array.(msg[1]);
+    ~scanned = out;
+};
+
+
+
+~listener = ~klanglistener;
+~listener = ~scannerlistener;
+
+~lwrap = {|msg| ~listener.(msg) };
+~lboth = {|msg| ~klanglistener.(msg); ~scannerlistener.(msg) };
+
+
+OSCFunc.newMatching(~lboth, '/samples');
+ 
+// {|msg| 
+// 	var out;
+// 	"My Klang 100 Listener".postln; 
+// 	// part a
+// 	out = ~int8ArrayToInt32Array.(msg[1])/1024.0;
+// 	~aold = (~aold * 0.9) + (0.1 * out);
+// 	~afreqs = ~aold * 1200;
+// 	~bamp = (~bamp * 0.9) + (0.1 * (out/~n));
+// 
+// 	a.setn(\freqs, ~afreqs,
+// 		\amps, Array.fill(~n,{0.01}));
+// 	b.setn(
+// 		\out, 1,
+// 		\freqs, ~bfreqs,
+// 		\amps, ~bamp);	       
+// }
